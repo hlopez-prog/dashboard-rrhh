@@ -6,23 +6,38 @@
  * Los pasteles institucionales (verde #D9EAD3 / naranja #FCE5CD) son
  * rellenos SEMÁNTICOS: significan "en meta" y "riesgo". No pueden
  * identificar series, porque el mismo color significaría dos cosas. Las
- * series usan la paleta de abajo, validada con el validador de la skill
- * dataviz sobre superficie blanca:
+ * series usan la paleta de abajo.
  *
- *   node scripts/validate_palette.js "#2A78D6,#B45F06,#1BAF7A,#7D3C98,#EDA100" \
- *        --mode light --surface "#FFFFFF"
+ * Ampliada a 8 tonos en agosto 2026, al pasar de 5 a 8 unidades mineras.
+ * NO se inventaron tonos: se adoptó el orden validado de la paleta de
+ * referencia, verificado sobre superficie blanca con
+ *
+ *   node scripts/validate_palette.js \
+ *     "#2a78d6,#eb6834,#1baf7a,#eda100,#e87ba4,#008300,#4a3aa7,#e34948" \
+ *     --mode light --surface "#FFFFFF"
  *   → TODAS LAS VERIFICACIONES PASAN
- *     separación CVD peor par adyacente ΔE 12.0 (deutan)
- *     visión normal peor par ΔE 24.2
- *     AVISO de contraste en aqua y amarillo → por eso cada gráfico lleva
- *     etiquetas directas visibles y botón "ver tabla" (regla de alivio).
+ *     separación CVD peor par adyacente ΔE 9.1 (protan)
+ *     visión normal peor par ΔE 19.6
+ *     AVISO de contraste en aqua, amarillo y magenta → por eso cada gráfico
+ *     lleva etiquetas directas visibles y botón "ver tabla" (regla de alivio).
+ *
+ * El ORDEN es el mecanismo de seguridad para daltonismo, no es decorativo:
+ * no lo reordenes sin volver a correr el validador. Y si algún día hacen
+ * falta más de 8 series, no se agrega un noveno tono a mano — se agrupa o
+ * se factoriza en gráficos pequeños. Ver TOPE_SERIES abajo.
  *
  * Orden fijo: la serie 3 es siempre aqua, aunque se filtre la serie 2.
  * El color sigue a la entidad, nunca a su posición en el ranking.
  */
 import { fmt, esc, el } from './util.js';
 
-export const PALETA = ['#2A78D6', '#B45F06', '#1BAF7A', '#7D3C98', '#EDA100'];
+export const PALETA = ['#2a78d6', '#eb6834', '#1baf7a', '#eda100',
+  '#e87ba4', '#008300', '#4a3aa7', '#e34948'];
+
+/* Cuántas series puede identificar la paleta sin repetir color. Pasado ese
+   número, repetir tonos haría que dos unidades se vieran iguales: es peor
+   que no dibujarlas. Quien llame recorta y lo dice en pantalla. */
+export const TOPE_SERIES = PALETA.length;
 const INK_MUTED = '#79776f';
 const GRID = '#e2e2de';
 const EJE = '#c4c4be';
@@ -197,7 +212,7 @@ export function lineas(contenedor, cfg) {
     }));
     /* Etiqueta directa al final: identidad sin depender del color. */
     const ult = [...pts].reverse().find(Boolean);
-    if (ult && series.length <= 5) {
+    if (ult && series.length <= TOPE_SERIES) {
       svg.append(s('circle', {
         cx: ult[0], cy: ult[1], r: 3.4, fill: c, stroke: SUPERFICIE, 'stroke-width': 2,
       }));
