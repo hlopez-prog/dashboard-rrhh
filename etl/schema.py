@@ -15,7 +15,9 @@ Convenciones:
 # --- Catálogos permitidos -------------------------------------------------
 TIPOS_RELACION = ["Propio", "Contratista"]
 TURNOS = ["7x7", "4x3", "14x14", "Administrativo"]
-TIPOS_AREA = ["Mina", "Planta", "Mantenimiento", "Seguridad", "Administración"]
+# Tipos de área de la operación. Ampliado en agosto 2026 con Exploración y
+# Metalurgia, que existen en la estructura real de Minera Rio Tinto.
+TIPOS_AREA = ["Mina", "Planta", "Metalurgia", "Exploración", "Mantenimiento", "Seguridad", "Administración"]
 DIRECCION_META = ["menor_mejor", "mayor_mejor"]
 
 # --- Definición de tablas -------------------------------------------------
