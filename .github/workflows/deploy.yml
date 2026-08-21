@@ -1,0 +1,119 @@
+name: Validar y publicar Dashboard de RRHH
+
+# Se dispara cuando cambian los datos, el ETL o la interfaz.
+# El contrato es simple: si la validación de datos falla, NO se publica.
+# El tablero conserva el cierre anterior en lugar de mostrar números malos.
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'data/**'          # el libro de Excel vive aquí
+      - 'etl/**'
+      - 'public/**'
+      - 'tests/**'
+      - '.github/workflows/**'
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      regenerar_demo:
+        description: 'Regenerar la base demo antes de publicar'
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages-dashboard-rrhh
+  cancel-in-progress: true
+
+jobs:
+  verificar:
+    name: Validar datos, KPIs e interfaz
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Instalar dependencias de Python
+        run: pip install openpyxl
+
+      - name: Regenerar base demo (solo si se pidió)
+        if: inputs.regenerar_demo
+        run: |
+          python3 etl/seed_demo.py
+          python3 etl/excel.py crear
+
+      - name: Probar lectura del libro de Excel y el validador
+        run: python3 -m unittest discover -s tests -v
+
+      - name: Validar esquema, llaves y reglas de negocio
+        run: python3 etl/validate.py
+
+      - name: Construir dashboard.json
+        run: python3 etl/build.py
+
+      - name: Probar fórmulas de KPI
+        run: node --test "tests/**/*.test.mjs"
+
+      - name: Instalar Playwright
+        # Sin package-lock.json en el repo: instalación directa y fijada.
+        run: |
+          npm install --no-save playwright@1.56.0
+          npx playwright install --with-deps chromium
+
+      - name: Pruebas end-to-end del tablero
+        run: node tests/e2e.mjs --capturas
+
+      - name: Guardar capturas de la revisión visual
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: capturas-dashboard
+          path: tests/capturas/
+          if-no-files-found: ignore
+          retention-days: 14
+
+      - name: Publicar el export CSV como artefacto auditable
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: export-csv-del-cierre
+          path: data/csv/
+          if-no-files-found: ignore
+          retention-days: 90
+
+      - name: Preparar artefacto de sitio
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: public
+
+  publicar:
+    name: Publicar en GitHub Pages
+    needs: verificar
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.despliegue.outputs.page_url }}
+    steps:
+      - id: despliegue
+        uses: actions/deploy-pages@v4
+
+      - name: Resumen
+        run: |
+          echo "### Dashboard de RRHH publicado" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "URL: ${{ steps.despliegue.outputs.page_url }}" >> $GITHUB_STEP_SUMMARY
+          echo "Commit: \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
