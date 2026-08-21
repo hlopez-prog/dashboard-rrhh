@@ -1,0 +1,6 @@
+unidad_id,unidad,estado,tipo_operacion,mineral_principal,es_corporativo
+U01,Mina La Esperanza,Zacatecas,Subterránea,Plata-Zinc,0
+U02,Mina San Rafael,Durango,Cielo abierto,Oro,0
+U03,Unidad El Refugio,Sonora,Cielo abierto,Cobre,0
+U04,Planta Concentradora Norte,Chihuahua,Planta,Plomo-Zinc,0
+U05,Corporativo,Ciudad de México,Corporativo,N/A,1

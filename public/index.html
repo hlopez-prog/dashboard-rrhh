@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="es-MX">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dashboard de RRHH · Minera Rio Tinto</title>
+  <meta name="description" content="Tablero de indicadores de Recursos Humanos para operaciones mineras: plantilla, rotación, ausentismo, costo laboral, capacitación y relaciones laborales.">
+  <meta name="color-scheme" content="light">
+  <link rel="stylesheet" href="assets/styles.css">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23000'/%3E%3Cpath d='M6 22h4v-8H6zm6 0h4V8h-4zm6 0h4v-11h-4zm6 0h4v-5h-4z' fill='%23fff'/%3E%3C/svg%3E">
+</head>
+<body>
+
+  <header class="banner">
+    <div class="banner-fila">
+      <div>
+        <h1>Dashboard de RRHH</h1>
+        <p class="org" id="org">Minera Rio Tinto</p>
+      </div>
+      <div class="banner-meta" id="banner-meta">Cargando…</div>
+    </div>
+    <div class="aviso-demo" id="aviso" hidden>
+      <strong>Datos de demostración.</strong> Las cifras de este tablero son sintéticas
+      y sirven para validar el modelo y la interfaz. Actualiza el libro
+      <code>data/BASE_RRHH.xlsx</code> con el cierre real y cambia la celda de origen a REAL
+      para retirar este aviso.
+    </div>
+  </header>
+
+  <nav class="nav" id="nav" aria-label="Módulos del dashboard"></nav>
+
+  <div class="filtros" id="filtros"></div>
+
+  <main>
+    <div class="panel" id="panel" role="tabpanel" tabindex="0">
+      <p class="cargando">Cargando indicadores…</p>
+    </div>
+  </main>
+
+  <footer class="pie">
+    <p>
+      <strong>Dashboard de RRHH</strong> · Minera Rio Tinto ·
+      Los indicadores se calculan sobre plantilla propia salvo indicación explícita.
+      Las tasas anualizadas usan ventana móvil de 12 meses.
+    </p>
+    <p>
+      Fuente de verdad: el libro <code>data/BASE_RRHH.xlsx</code> del repositorio.
+      Actualización automática vía GitHub Actions en cada push a <code>main</code>.
+    </p>
+  </footer>
+
+  <script type="module" src="assets/js/app.js"></script>
+  <noscript>
+    <p class="error-carga">
+      Este tablero requiere JavaScript para calcular los indicadores en el navegador.
+      Los datos crudos están disponibles como CSV en el repositorio.
+    </p>
+  </noscript>
+</body>
+</html>

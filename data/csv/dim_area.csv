@@ -1,0 +1,7 @@
+area_id,area,tipo_area,es_critica
+A01,Mina Subterránea,Mina,1
+A02,Mina Tajo,Mina,1
+A03,Planta de Beneficio,Planta,1
+A04,Mantenimiento,Mantenimiento,1
+A05,Seguridad y Salud,Seguridad,0
+A06,Administración y RRHH,Administración,0

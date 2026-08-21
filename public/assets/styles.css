@@ -1,0 +1,597 @@
+/* ============================================================
+   Dashboard de RRHH — Minera Rio Tinto
+   Sistema visual corporativo.
+
+   Paleta institucional (definida por la Dirección):
+     Negro   #000000  encabezados de tabla, texto blanco
+     Verde   #D9EAD3  Objetivo primario / Éxito a 6 meses
+     Naranja #FCE5CD  Dependencia crítica / Riesgo principal
+     Gris    #F2F2F2  banner de título, celdas de relaciones/riesgos
+
+   Las series de gráfico usan una paleta aparte, validada para
+   daltonismo (ver graficos.js). Los pasteles verde y naranja
+   son rellenos semánticos: nunca identifican una serie.
+   ============================================================ */
+
+:root {
+  /* --- Paleta institucional --- */
+  --negro: #000000;
+  --verde-objetivo: #d9ead3;
+  --naranja-riesgo: #fce5cd;
+  --gris-banner: #f2f2f2;
+
+  /* Tintes derivados para bordes y texto sobre los pasteles */
+  --verde-borde: #a8c69a;
+  --verde-texto: #274e13;
+  --naranja-borde: #e8c39e;
+  --naranja-texto: #7a3e00;
+  --gris-borde: #d5d5d5;
+
+  /* --- Superficies e ink --- */
+  --superficie: #ffffff;
+  --plano: #fafafa;
+  --ink-1: #0b0b0b;
+  --ink-2: #4a4a48;
+  --ink-3: #79776f;
+  --linea: #e2e2de;
+  --linea-fuerte: #c4c4be;
+
+  /* --- Estado (icono + etiqueta obligatorios) --- */
+  --estado-ok: #38761d;
+  --estado-alerta: #b45f06;
+  --estado-critico: #a61c00;
+
+  --sombra: 0 1px 2px rgba(0, 0, 0, .05), 0 1px 8px rgba(0, 0, 0, .04);
+  --radio: 4px;
+  --fuente: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  font-family: var(--fuente);
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--ink-1);
+  background: var(--plano);
+}
+
+/* ---------- Banner de título (gris institucional) ---------- */
+.banner {
+  background: var(--gris-banner);
+  border-bottom: 2px solid var(--negro);
+  padding: 18px 24px 14px;
+}
+
+.banner-fila {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  flex-wrap: wrap;
+  max-width: 1440px;
+  margin: 0 auto;
+}
+
+.banner h1 {
+  margin: 0;
+  font-size: 21px;
+  font-weight: 700;
+  letter-spacing: -.01em;
+}
+
+.banner .org {
+  margin: 2px 0 0;
+  font-size: 12.5px;
+  color: var(--ink-2);
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+
+.banner-meta {
+  font-size: 11.5px;
+  color: var(--ink-2);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.banner-meta strong { color: var(--ink-1); }
+
+.aviso-demo {
+  max-width: 1440px;
+  margin: 0 auto;
+  background: var(--naranja-riesgo);
+  border: 1px solid var(--naranja-borde);
+  border-radius: var(--radio);
+  padding: 6px 12px;
+  margin-top: 12px;
+  font-size: 12px;
+  color: var(--naranja-texto);
+}
+
+/* ---------- Navegación de módulos ---------- */
+.nav {
+  background: var(--negro);
+  padding: 0 24px;
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  overflow-x: auto;
+}
+
+.nav-inner {
+  display: flex;
+  gap: 2px;
+  max-width: 1440px;
+  margin: 0 auto;
+}
+
+.nav button {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: #d8d8d4;
+  font: inherit;
+  font-size: 13px;
+  padding: 11px 16px;
+  cursor: pointer;
+  white-space: nowrap;
+  border-bottom: 3px solid transparent;
+}
+
+.nav button:hover { color: #fff; background: rgba(255, 255, 255, .07); }
+
+.nav button[aria-selected="true"] {
+  color: #fff;
+  font-weight: 600;
+  border-bottom-color: #fff;
+  background: rgba(255, 255, 255, .1);
+}
+
+.nav button:focus-visible { outline: 2px solid #fff; outline-offset: -3px; }
+
+/* ---------- Filtros ---------- */
+.filtros {
+  background: var(--superficie);
+  border-bottom: 1px solid var(--linea);
+  padding: 12px 24px;
+  position: sticky;
+  top: 43px;
+  z-index: 20;
+}
+
+.filtros-inner {
+  display: flex;
+  gap: 18px;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  max-width: 1440px;
+  margin: 0 auto;
+}
+
+.campo { display: flex; flex-direction: column; gap: 4px; }
+
+.campo > label {
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  color: var(--ink-3);
+}
+
+.campo select,
+.campo .chips { min-width: 150px; }
+
+select {
+  font: inherit;
+  font-size: 13px;
+  padding: 5px 8px;
+  border: 1px solid var(--linea-fuerte);
+  border-radius: var(--radio);
+  background: var(--superficie);
+  color: var(--ink-1);
+}
+
+.chips { display: flex; gap: 4px; flex-wrap: wrap; }
+
+.chip {
+  appearance: none;
+  font: inherit;
+  font-size: 12px;
+  padding: 4px 9px;
+  border: 1px solid var(--linea-fuerte);
+  border-radius: 999px;
+  background: var(--superficie);
+  color: var(--ink-2);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.chip:hover { background: var(--gris-banner); }
+
+.chip[aria-pressed="true"] {
+  background: var(--negro);
+  border-color: var(--negro);
+  color: #fff;
+  font-weight: 600;
+}
+
+.chip .punto {
+  width: 8px; height: 8px; border-radius: 50%;
+  flex: 0 0 auto;
+  box-shadow: 0 0 0 2px var(--superficie);
+}
+
+.filtros-acciones { margin-left: auto; display: flex; gap: 8px; }
+
+.boton {
+  appearance: none;
+  font: inherit;
+  font-size: 12.5px;
+  padding: 6px 12px;
+  border: 1px solid var(--negro);
+  border-radius: var(--radio);
+  background: var(--superficie);
+  color: var(--ink-1);
+  cursor: pointer;
+}
+
+.boton:hover { background: var(--gris-banner); }
+
+.boton-primario { background: var(--negro); color: #fff; }
+.boton-primario:hover { background: #222; }
+
+/* ---------- Layout ---------- */
+main {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 20px 24px 64px;
+}
+
+.panel[hidden] { display: none; }
+
+.seccion { margin-bottom: 28px; }
+
+.seccion > h2 {
+  font-size: 15px;
+  font-weight: 700;
+  margin: 0 0 4px;
+  padding: 7px 12px;
+  background: var(--gris-banner);
+  border-left: 4px solid var(--negro);
+}
+
+.seccion > .subtitulo {
+  margin: 0 0 12px;
+  padding-left: 16px;
+  font-size: 12.5px;
+  color: var(--ink-2);
+}
+
+.rejilla {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+}
+
+.rejilla-2 {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(520px, 1fr));
+}
+
+/* Un gráfico que necesita ancho —barras horizontales con etiquetas largas—
+   ocupa la fila completa en lugar de encogerse a un tercio. */
+.rejilla-2 > .ancho-total { grid-column: 1 / -1; }
+
+/* ---------- Tarjeta de KPI ---------- */
+.kpi {
+  background: var(--superficie);
+  border: 1px solid var(--linea);
+  border-radius: var(--radio);
+  padding: 12px 14px;
+  box-shadow: var(--sombra);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.kpi.en-meta { background: var(--verde-objetivo); border-color: var(--verde-borde); }
+.kpi.fuera-meta { background: var(--naranja-riesgo); border-color: var(--naranja-borde); }
+
+.kpi-nombre {
+  font-size: 11.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  color: var(--ink-2);
+}
+
+.kpi-valor {
+  font-size: 29px;
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: -.02em;
+}
+
+.kpi-valor .unidad { font-size: 15px; font-weight: 600; color: var(--ink-2); margin-left: 2px; }
+
+.kpi-pie {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  font-size: 11.5px;
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.etiqueta-estado {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 700;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.etiqueta-estado.ok { color: var(--verde-texto); }
+.etiqueta-estado.alerta { color: var(--naranja-texto); }
+.etiqueta-estado.neutro { color: var(--ink-2); }
+
+.kpi-sparkline { height: 26px; margin-top: 2px; }
+
+/* ---------- Marco de gráfico ---------- */
+.grafico {
+  background: var(--superficie);
+  border: 1px solid var(--linea);
+  border-radius: var(--radio);
+  padding: 12px 14px 10px;
+  box-shadow: var(--sombra);
+  position: relative;
+}
+
+.grafico-encabezado {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 2px;
+}
+
+.grafico h3 { margin: 0; font-size: 13.5px; font-weight: 700; }
+
+.grafico .nota { margin: 0 0 8px; font-size: 11.5px; color: var(--ink-3); }
+
+.ver-tabla {
+  appearance: none;
+  border: 1px solid var(--linea-fuerte);
+  background: var(--superficie);
+  border-radius: var(--radio);
+  font: inherit;
+  font-size: 11px;
+  padding: 3px 8px;
+  cursor: pointer;
+  color: var(--ink-2);
+  white-space: nowrap;
+}
+
+.ver-tabla:hover { background: var(--gris-banner); }
+
+.leyenda {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: 6px 0 0;
+  font-size: 11.5px;
+  color: var(--ink-2);
+}
+
+.leyenda span { display: inline-flex; align-items: center; gap: 5px; }
+
+.leyenda .marca { width: 11px; height: 11px; border-radius: 2px; flex: 0 0 auto; }
+.leyenda .marca.linea { height: 3px; border-radius: 2px; }
+
+svg { display: block; width: 100%; height: auto; overflow: visible; }
+
+.tooltip {
+  position: absolute;
+  z-index: 40;
+  pointer-events: none;
+  background: var(--negro);
+  color: #fff;
+  border-radius: var(--radio);
+  padding: 7px 9px;
+  font-size: 11.5px;
+  line-height: 1.45;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, .28);
+  max-width: 260px;
+  opacity: 0;
+  transition: opacity .08s;
+  font-variant-numeric: tabular-nums;
+}
+
+.tooltip[data-visible="true"] { opacity: 1; }
+.tooltip .tt-titulo { font-weight: 700; margin-bottom: 3px; }
+.tooltip .tt-fila { display: flex; align-items: center; gap: 6px; justify-content: space-between; }
+.tooltip .tt-marca { width: 8px; height: 8px; border-radius: 2px; flex: 0 0 auto; }
+.tooltip .tt-val { font-weight: 700; margin-left: auto; }
+
+/* ---------- Tablas ---------- */
+.tabla-envoltura { overflow-x: auto; margin-top: 8px; }
+
+table.datos {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+  background: var(--superficie);
+}
+
+table.datos caption {
+  caption-side: top;
+  text-align: left;
+  font-size: 12px;
+  color: var(--ink-2);
+  padding-bottom: 6px;
+}
+
+/* Encabezado negro con texto blanco — requisito institucional */
+table.datos thead th {
+  background: var(--negro);
+  color: #ffffff;
+  font-weight: 600;
+  text-align: right;
+  padding: 8px 10px;
+  border-right: 1px solid #333;
+  white-space: nowrap;
+  position: sticky;
+  top: 0;
+}
+
+table.datos thead th:first-child { text-align: left; }
+table.datos thead th:last-child { border-right: 0; }
+
+table.datos tbody td {
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--linea);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+table.datos tbody td:first-child { text-align: left; font-weight: 500; }
+table.datos tbody th[scope="row"] {
+  text-align: left;
+  font-weight: 600;
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--linea);
+  min-width: 190px;
+}
+table.datos tbody tr:hover td { background: rgba(0, 0, 0, .025); }
+table.datos tbody tr.total td { font-weight: 700; border-top: 2px solid var(--negro); background: var(--gris-banner); }
+
+td.celda-ok, .fila-ok td { background: var(--verde-objetivo); }
+td.celda-alerta, .fila-alerta td { background: var(--naranja-riesgo); }
+td.celda-neutra, .fila-neutra td { background: var(--gris-banner); }
+
+/* ---------- Matriz ejecutiva ---------- */
+table.matriz {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+  background: var(--superficie);
+  border: 1px solid var(--negro);
+}
+
+table.matriz thead th {
+  background: var(--negro);
+  color: #fff;
+  text-align: left;
+  font-weight: 600;
+  padding: 9px 11px;
+  border-right: 1px solid #333;
+  vertical-align: bottom;
+}
+
+table.matriz thead th:last-child { border-right: 0; }
+
+table.matriz th[scope="row"] {
+  text-align: left;
+  font-weight: 700;
+  padding: 9px 11px;
+  width: 190px;
+  border-right: 1px solid var(--negro);
+  background: var(--gris-banner);
+  vertical-align: top;
+}
+
+table.matriz td {
+  padding: 9px 11px;
+  border-top: 1px solid var(--gris-borde);
+  border-right: 1px solid var(--gris-borde);
+  vertical-align: top;
+  line-height: 1.45;
+}
+
+table.matriz td:last-child { border-right: 0; }
+table.matriz tr.objetivo td { background: var(--verde-objetivo); }
+table.matriz tr.exito td { background: var(--verde-objetivo); }
+table.matriz tr.dependencia td { background: var(--naranja-riesgo); }
+table.matriz tr.riesgo td { background: var(--naranja-riesgo); }
+table.matriz tr.relaciones td { background: var(--gris-banner); }
+table.matriz td .dato { font-weight: 700; font-variant-numeric: tabular-nums; }
+
+/* ---------- Leyenda de la paleta ---------- */
+.leyenda-paleta {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  font-size: 11.5px;
+  color: var(--ink-2);
+  margin-top: 10px;
+  padding: 8px 12px;
+  background: var(--superficie);
+  border: 1px solid var(--linea);
+  border-radius: var(--radio);
+}
+
+.leyenda-paleta span { display: inline-flex; align-items: center; gap: 6px; }
+
+.leyenda-paleta i {
+  width: 18px; height: 12px;
+  border: 1px solid var(--gris-borde);
+  border-radius: 2px;
+  display: inline-block;
+}
+
+/* ---------- Estados de carga / error ---------- */
+.cargando, .error-carga {
+  padding: 40px 24px;
+  text-align: center;
+  color: var(--ink-2);
+}
+
+.error-carga {
+  background: var(--naranja-riesgo);
+  border: 1px solid var(--naranja-borde);
+  border-radius: var(--radio);
+  color: var(--naranja-texto);
+  text-align: left;
+}
+
+.error-carga code {
+  display: block;
+  margin-top: 8px;
+  font-size: 12px;
+  background: var(--superficie);
+  padding: 8px;
+  border-radius: var(--radio);
+  overflow-x: auto;
+}
+
+.pie {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 16px 24px 40px;
+  font-size: 11.5px;
+  color: var(--ink-3);
+  border-top: 1px solid var(--linea);
+}
+
+/* ---------- Impresión ---------- */
+@media print {
+  .nav, .filtros, .ver-tabla { display: none; }
+  body { background: #fff; }
+  .panel[hidden] { display: block !important; }
+  .grafico, .kpi { break-inside: avoid; box-shadow: none; }
+}
+
+@media (max-width: 640px) {
+  .banner-meta { text-align: left; }
+  main, .filtros, .banner, .nav { padding-left: 14px; padding-right: 14px; }
+  .kpi-valor { font-size: 25px; }
+}

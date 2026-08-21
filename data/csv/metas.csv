@@ -1,0 +1,18 @@
+kpi,nombre,meta,direccion,unidad_medida
+rotacion_anualizada,Rotación anualizada,14.0,menor_mejor,%
+rotacion_voluntaria,Rotación voluntaria anualizada,9.5,menor_mejor,%
+ausentismo,Tasa de ausentismo,3.0,menor_mejor,%
+cobertura_plantilla,Cobertura de plantilla autorizada,97.0,mayor_mejor,%
+cobertura_critica,Cobertura de puestos críticos,95.0,mayor_mejor,%
+rotacion_temprana,Rotación temprana (<90 días),18.0,menor_mejor,%
+dias_cobertura,Días para cubrir vacante,32.0,menor_mejor,días
+pct_contratistas,Contratistas sobre fuerza total,32.0,menor_mejor,%
+pct_horas_extra,Horas extra sobre ordinarias,6.0,menor_mejor,%
+var_presupuesto,Variación vs presupuesto,1.5,menor_mejor,%
+costo_por_tonelada,Costo laboral por tonelada,48.0,menor_mejor,MXN/t
+productividad,Productividad,4.4,mayor_mejor,t/HH
+cumplimiento_plan_cap,Cumplimiento del plan de capacitación,95.0,mayor_mejor,%
+cumplimiento_dc3,Cumplimiento DC-3,98.0,mayor_mejor,%
+horas_cap_por_persona,Horas de capacitación por persona,2.1,mayor_mejor,HH
+cobertura_competencias,Cobertura de matriz de competencias,95.0,mayor_mejor,%
+enps,eNPS,30.0,mayor_mejor,pts
