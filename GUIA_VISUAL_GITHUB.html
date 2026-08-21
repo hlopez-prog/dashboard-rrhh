@@ -1,0 +1,1072 @@
+<!DOCTYPE html>
+<html lang="es-MX">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Guía visual · Publicar el Dashboard de RRHH en GitHub</title>
+<style>
+:root{
+  --negro:#000;--verde:#d9ead3;--naranja:#fce5cd;--gris:#f2f2f2;
+  --verde-borde:#a8c69a;--verde-texto:#274e13;
+  --naranja-borde:#e8c39e;--naranja-texto:#7a3e00;
+  --gris-borde:#d5d5d5;
+  --sup:#fff;--plano:#fafafa;--ink1:#0b0b0b;--ink2:#4a4a48;--ink3:#79776f;
+  --linea:#e2e2de;--azul:#2a78d6;
+  --f:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:var(--f);font-size:15px;line-height:1.6;color:var(--ink1);background:var(--plano)}
+.banner{background:var(--gris);border-bottom:2px solid var(--negro);padding:22px 24px 18px}
+.wrap{max-width:1020px;margin:0 auto}
+.banner h1{margin:0;font-size:24px;letter-spacing:-.01em}
+.banner p{margin:4px 0 0;font-size:13px;color:var(--ink2)}
+.banner .org{text-transform:uppercase;letter-spacing:.08em;font-size:12px}
+
+/* --- Personalizador --- */
+.config{background:var(--negro);color:#fff;padding:14px 24px}
+.config .wrap{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.config label{font-size:12.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#d8d8d4}
+.config input{font:inherit;font-size:15px;padding:7px 11px;border:0;border-radius:4px;min-width:240px}
+.config .hint{font-size:12.5px;color:#b9b9b4}
+.config .ok{font-size:12.5px;color:var(--verde);font-weight:700}
+
+main{max-width:1020px;margin:0 auto;padding:24px 24px 80px}
+
+.aviso{background:var(--naranja);border:1px solid var(--naranja-borde);border-radius:4px;
+  padding:12px 16px;color:var(--naranja-texto);font-size:14px;margin-bottom:24px}
+.aviso strong{color:#5c2f00}
+
+.paso{background:var(--sup);border:1px solid var(--linea);border-radius:4px;
+  margin-bottom:22px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.05)}
+.paso>h2{margin:0;background:var(--negro);color:#fff;font-size:17px;padding:12px 18px;
+  display:flex;align-items:center;gap:12px}
+.paso>h2 .n{background:#fff;color:var(--negro);width:26px;height:26px;border-radius:50%;
+  display:inline-flex;align-items:center;justify-content:center;font-size:14px;flex:0 0 auto}
+.paso>h2 .t{font-size:12px;font-weight:400;color:#b9b9b4;margin-left:auto;white-space:nowrap}
+.cuerpo{padding:18px}
+
+.ir{background:var(--gris);border:1px solid var(--gris-borde);border-radius:4px;
+  padding:12px 14px;margin:0 0 18px}
+.ir .et{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--ink3)}
+.ir a{display:inline-block;margin-top:5px;font-family:var(--mono);font-size:13.5px;
+  color:var(--azul);word-break:break-all;font-weight:600}
+.ir a.pendiente{color:var(--ink3);pointer-events:none;text-decoration:none}
+.ir .nota{margin:6px 0 0;font-size:12.5px;color:var(--ink2)}
+
+ol.pasos{margin:0 0 4px;padding-left:22px}
+ol.pasos>li{margin-bottom:11px}
+ul.simple{margin:6px 0;padding-left:20px}
+ul.simple li{margin-bottom:5px}
+
+.btn-lit{display:inline-block;background:#1f883d;color:#fff;border-radius:5px;
+  padding:1px 9px;font-size:13px;font-weight:600;white-space:nowrap}
+.btn-gris{display:inline-block;background:#f6f8fa;border:1px solid #d1d9e0;border-radius:5px;
+  padding:1px 8px;font-size:13px;font-weight:600;white-space:nowrap;color:#24292f}
+.lit{font-family:var(--mono);font-size:13.5px;background:var(--gris);
+  border:1px solid var(--gris-borde);border-radius:3px;padding:1px 5px}
+code{font-family:var(--mono);font-size:13.5px;background:var(--gris);
+  border-radius:3px;padding:1px 5px}
+
+figure{margin:16px 0;padding:0}
+figure svg{display:block;width:100%;height:auto;border:1px solid var(--gris-borde);
+  border-radius:5px;background:#fff}
+figcaption{font-size:12.5px;color:var(--ink3);margin-top:6px;font-style:italic}
+
+.hallar{background:var(--naranja);border:1px solid var(--naranja-borde);border-radius:4px;
+  padding:12px 14px;margin-top:16px}
+.hallar h4{margin:0 0 6px;font-size:13px;color:var(--naranja-texto);
+  text-transform:uppercase;letter-spacing:.05em}
+.hallar p,.hallar li{font-size:13.5px;color:#5c2f00;margin:5px 0}
+
+.listo{background:var(--verde);border:1px solid var(--verde-borde);border-radius:4px;
+  padding:12px 14px;margin-top:16px}
+.listo h4{margin:0 0 6px;font-size:13px;color:var(--verde-texto);
+  text-transform:uppercase;letter-spacing:.05em}
+.listo p,.listo li{font-size:13.5px;color:#1e3b0e;margin:5px 0}
+
+table{width:100%;border-collapse:collapse;font-size:13.5px;margin:14px 0}
+th{background:var(--negro);color:#fff;text-align:left;padding:8px 10px;font-weight:600}
+td{padding:7px 10px;border-bottom:1px solid var(--linea);vertical-align:top}
+tbody tr:nth-child(even) td{background:#fcfcfc}
+
+.check{list-style:none;padding:0;margin:8px 0}
+.check li{padding:6px 0 6px 28px;position:relative;border-bottom:1px solid var(--linea);font-size:14px}
+.check li:before{content:"";position:absolute;left:2px;top:9px;width:15px;height:15px;
+  border:1.5px solid var(--ink3);border-radius:3px}
+
+.pie{border-top:1px solid var(--linea);margin-top:30px;padding-top:16px;
+  font-size:12.5px;color:var(--ink3)}
+
+@media print{
+  .config{background:#fff;color:#000;border-bottom:1px solid #000}
+  .config input{border:1px solid #000}
+  .paso{break-inside:avoid}
+}
+@media(max-width:640px){
+  main,.banner,.config{padding-left:14px;padding-right:14px}
+  .banner h1{font-size:20px}
+}
+</style>
+</head>
+<body>
+
+<header class="banner">
+  <div class="wrap">
+    <p class="org">Minera Rio Tinto</p>
+    <h1>Guía visual: publicar el Dashboard de RRHH en GitHub</h1>
+    <p>Del Paso 3 al final, con maqueta de cada pantalla y el botón exacto señalado.
+       Los enlaces de esta guía te llevan directo: no tienes que buscar nada en el menú.</p>
+  </div>
+</header>
+
+<div class="config">
+  <div class="wrap">
+    <label for="usuario">Tu usuario de GitHub</label>
+    <input id="usuario" type="text" placeholder="ejemplo: hlopez-mrt" autocomplete="off" spellcheck="false">
+    <span class="hint" id="hint">Escríbelo y todos los enlaces de la guía quedan listos para hacer clic.</span>
+  </div>
+</div>
+
+<main>
+
+<div class="aviso">
+  <strong>Dos cosas que hacen fallar los enlaces.</strong>
+  <br><strong>1.</strong> El usuario que se pide arriba es tu <em>nombre de usuario</em>, el que
+  aparece en la URL de tu perfil (<code>github.com/<u>ese-de-aqui</u></code>), no tu nombre para
+  mostrar. Si tu perfil dice "Daniel López" pero tu usuario es <code>dlopez-mrt</code>, va el
+  segundo.
+  <br><strong>2.</strong> Esta guía asume que el repositorio se llama <code>dashboard-rrhh</code>,
+  como en el Paso 2. Si le pusiste otro nombre, sustitúyelo en los enlaces.
+</div>
+
+<div class="paso" id="e404">
+  <h2><span class="n">?</span> ¿Un enlace te dio 404?</h2>
+  <div class="cuerpo">
+    <p>Si al pegar un enlace de esta guía te sale la página de GitHub que dice
+    <em>"This is not the web page you are looking for"</em>, haz esta prueba de un solo paso:</p>
+
+    <div class="ir">
+      <div class="et">Abre solo el repositorio, sin nada más</div>
+      <a class="url pendiente" data-url="https://github.com/{U}/dashboard-rrhh">
+        https://github.com/TU-USUARIO/dashboard-rrhh</a>
+    </div>
+
+    <table>
+      <thead><tr><th style="width:30%">¿Qué pasó con ese enlace?</th><th>Qué significa y qué hacer</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><strong>También da 404</strong></td>
+          <td>El problema es la dirección, no el paso. Revisa, en este orden:
+            <ul class="simple">
+              <li><strong>Tu nombre de usuario.</strong> Ábrelo desde tu propia foto de perfil
+                (arriba a la derecha) → <strong>Your profile</strong>, y copia el usuario de la barra
+                de direcciones. Ese es el que va arriba en esta guía.</li>
+              <li><strong>El nombre del repositorio.</strong> Foto de perfil →
+                <strong>Your repositories</strong>. Ahí ves el nombre exacto, con sus guiones y
+                mayúsculas. GitHub distingue entre <code>dashboard-rrhh</code> y
+                <code>Dashboard-RRHH</code>.</li>
+              <li><strong>Que estés con la sesión iniciada</strong> y en la cuenta correcta. Un
+                repositorio privado al que no tienes acceso también responde 404, no "prohibido".</li>
+            </ul>
+          </td>
+        </tr>
+        <tr>
+          <td><strong>Sí abre el repositorio</strong></td>
+          <td>Entonces falta la rama <code>main</code>: un repositorio <strong>sin ningún archivo
+            todavía no tiene ramas</strong>, y por eso cualquier enlace que termine en
+            <code>/main</code> da 404. Significa que el <strong>Paso 3 no se completó</strong>.
+            Vuelve al Paso 3, sube los archivos y confirma que la página del repositorio muestre las
+            carpetas <code>data</code>, <code>etl</code>, <code>public</code>. Con eso, los enlaces
+            del Paso 4 en adelante funcionan.</td>
+        </tr>
+        <tr>
+          <td><strong>Abre y ya tiene archivos</strong></td>
+          <td>Revisa cómo se llama tu rama principal: en la pestaña <strong>Code</strong>, el botón
+            del lado izquierdo arriba de la lista de archivos dice el nombre. Casi siempre es
+            <code>main</code>; si dijera <code>master</code>, cambia <code>/main</code> por
+            <code>/master</code> en los enlaces de esta guía.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="listo">
+      <h4>La ruta que nunca falla</h4>
+      <p>Los enlaces directos son un atajo, no la única vía. Desde la página del repositorio,
+      el botón <span class="btn-gris">Add file ▾</span> te lleva a lo mismo sin depender de la rama
+      ni de la URL. La maqueta del Paso 4 te muestra dónde está.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ================= PASO 3 ================= -->
+<section class="paso">
+  <h2><span class="n">3</span> Subir los archivos <span class="t">≈ 4 min</span></h2>
+  <div class="cuerpo">
+
+    <div class="ir">
+      <div class="et">Ir directo a esta pantalla</div>
+      <a class="url pendiente" data-url="https://github.com/{U}/dashboard-rrhh/upload/main">
+        https://github.com/TU-USUARIO/dashboard-rrhh/upload/main</a>
+      <p class="nota"><strong>Si el repositorio está recién creado y todavía vacío</strong>, esta URL
+      puede no abrir. En ese caso usa el enlace que aparece en la pantalla de bienvenida del
+      repositorio, señalado abajo con ①.</p>
+    </div>
+
+    <p>Al crear el repositorio caes en una pantalla de bienvenida titulada
+    <strong>Quick setup</strong>. Se ve así:</p>
+
+    <figure>
+      <svg viewBox="0 0 900 300" role="img" aria-label="Pantalla Quick setup de un repositorio nuevo">
+        <rect width="900" height="300" fill="#fff"/>
+        <!-- barra superior -->
+        <rect x="0" y="0" width="900" height="34" fill="#f6f8fa"/>
+        <line x1="0" y1="34" x2="900" y2="34" stroke="#d1d9e0"/>
+        <circle cx="20" cy="17" r="7" fill="#24292f"/>
+        <text x="36" y="21" font-family="system-ui" font-size="12" fill="#24292f" font-weight="600">TU-USUARIO / dashboard-rrhh</text>
+        <rect x="228" y="10" width="46" height="15" rx="7" fill="#fff" stroke="#d1d9e0"/>
+        <text x="238" y="21" font-family="system-ui" font-size="9" fill="#59636e">Public</text>
+        <!-- pestañas -->
+        <g font-family="system-ui" font-size="11" fill="#24292f">
+          <text x="20" y="55">Code</text><text x="62" y="55">Issues</text>
+          <text x="108" y="55">Pull requests</text><text x="188" y="55">Actions</text>
+          <text x="238" y="55">Projects</text><text x="292" y="55">Security</text>
+          <text x="348" y="55">Insights</text><text x="404" y="55">Settings</text>
+        </g>
+        <line x1="0" y1="66" x2="900" y2="66" stroke="#d1d9e0"/>
+        <!-- contenido -->
+        <text x="20" y="96" font-family="system-ui" font-size="16" font-weight="700" fill="#1f2328">Quick setup — if you’ve done this kind of thing before</text>
+        <rect x="20" y="112" width="620" height="30" rx="5" fill="#f6f8fa" stroke="#d1d9e0"/>
+        <text x="32" y="132" font-family="ui-monospace" font-size="11" fill="#59636e">https://github.com/TU-USUARIO/dashboard-rrhh.git</text>
+
+        <text x="20" y="176" font-family="system-ui" font-size="12.5" fill="#1f2328">Get started by
+          <tspan font-weight="600" fill="#0969da">creating a new file</tspan> or
+          <tspan font-weight="600" fill="#0969da">uploading an existing file</tspan>.
+        </text>
+        <!-- subrayado del enlace clave -->
+        <line x1="242" y1="180" x2="418" y2="180" stroke="#b45f06" stroke-width="2"/>
+        <!-- callout -->
+        <circle cx="440" cy="176" r="13" fill="#b45f06"/>
+        <text x="440" y="181" font-family="system-ui" font-size="13" font-weight="700" fill="#fff" text-anchor="middle">1</text>
+        <line x1="453" y1="176" x2="520" y2="176" stroke="#b45f06" stroke-width="2"/>
+        <text x="528" y="181" font-family="system-ui" font-size="12.5" font-weight="700" fill="#b45f06">Haz clic aquí</text>
+
+        <text x="20" y="216" font-family="system-ui" font-size="12" fill="#59636e">…or push an existing repository from the command line</text>
+        <rect x="20" y="228" width="620" height="52" rx="5" fill="#f6f8fa" stroke="#d1d9e0"/>
+        <text x="32" y="248" font-family="ui-monospace" font-size="10" fill="#8b949e">git remote add origin …</text>
+        <text x="32" y="266" font-family="ui-monospace" font-size="10" fill="#8b949e">git push -u origin main</text>
+        <text x="660" y="248" font-family="system-ui" font-size="11" fill="#8b949e">← esta parte</text>
+        <text x="660" y="264" font-family="system-ui" font-size="11" fill="#8b949e">   ignórala</text>
+      </svg>
+      <figcaption>Pantalla de bienvenida del repositorio vacío. El enlace que necesitas está en el
+      párrafo de texto, no es un botón: dice <em>uploading an existing file</em>.</figcaption>
+    </figure>
+
+    <ol class="pasos">
+      <li>Clic en <strong>uploading an existing file</strong> ①. Es texto azul dentro de la frase
+        <em>"Get started by creating a new file or uploading an existing file"</em>.</li>
+      <li>Se abre la pantalla de carga, con un recuadro punteado grande en el centro.</li>
+      <li><strong>Vas a arrastrar 9 cosas, no 43 archivos.</strong> Entra a la carpeta
+        <code>repositorio-para-github</code> y selecciona con <span class="lit">Ctrl+A</span>
+        (Windows) o <span class="lit">Cmd+A</span> (Mac) exactamente estos 9 elementos:
+        <table style="margin:8px 0">
+          <thead><tr><th>5 carpetas — <em>sin abrirlas</em></th><th>4 archivos</th></tr></thead>
+          <tbody><tr>
+            <td><code>data</code> · <code>etl</code> · <code>plantillas</code> ·
+                <code>public</code> · <code>tests</code></td>
+            <td><code>README.md</code> · <code>package.json</code><br>
+                <code>INSTALACION_GITHUB.md</code> · <code>GUIA_VISUAL_GITHUB.html</code></td>
+          </tr></tbody>
+        </table>
+      </li>
+      <li><strong>No entres a las carpetas.</strong> Se arrastran cerradas: GitHub las abre solo y
+        conserva la estructura. Si entras a <code>etl</code> y seleccionas los archivos de adentro,
+        <em>llegan sueltos a la raíz</em> y nada funciona.</li>
+      <li>Arrastra los 9 elementos al recuadro punteado ②.
+        <br><strong>Tiene que ser arrastrando.</strong> El botón
+        <span class="btn-gris">choose your files</span> abre el explorador de archivos de Windows, y
+        ese <em>no puede cargar carpetas</em>: aplana todo.</li>
+      <li>Espera. GitHub tarda unos segundos en recorrer las subcarpetas. Al terminar reporta
+        <strong>43 archivos</strong> — ese es el número que GitHub cuenta después de abrir las
+        carpetas, no el número de cosas que seleccionaste.</li>
+      <li>En el campo de mensaje ③ escribe <code>Carga inicial del Dashboard de RRHH</code>.</li>
+      <li>Botón verde <span class="btn-lit">Commit changes</span> ④.</li>
+    </ol>
+
+    <figure>
+      <svg viewBox="0 0 900 340" role="img" aria-label="Pantalla de carga de archivos">
+        <rect width="900" height="340" fill="#fff"/>
+        <rect x="0" y="0" width="900" height="34" fill="#f6f8fa"/>
+        <line x1="0" y1="34" x2="900" y2="34" stroke="#d1d9e0"/>
+        <text x="20" y="21" font-family="system-ui" font-size="12" fill="#24292f" font-weight="600">TU-USUARIO / dashboard-rrhh</text>
+        <text x="20" y="58" font-family="system-ui" font-size="14" font-weight="700" fill="#1f2328">Add files to dashboard-rrhh</text>
+
+        <!-- zona de arrastre -->
+        <rect x="20" y="74" width="860" height="112" rx="6" fill="#f6f8fa" stroke="#8c959f" stroke-dasharray="7 5" stroke-width="2"/>
+        <text x="450" y="118" font-family="system-ui" font-size="14" fill="#59636e" text-anchor="middle" font-weight="600">Drag files here to add them to your repository</text>
+        <text x="450" y="140" font-family="system-ui" font-size="12" fill="#8b949e" text-anchor="middle">Or</text>
+        <rect x="392" y="150" width="116" height="24" rx="5" fill="#f6f8fa" stroke="#d1d9e0"/>
+        <text x="450" y="166" font-family="system-ui" font-size="11.5" fill="#0969da" text-anchor="middle" font-weight="600">choose your files</text>
+        <circle cx="855" cy="96" r="13" fill="#b45f06"/>
+        <text x="855" y="101" font-family="system-ui" font-size="13" font-weight="700" fill="#fff" text-anchor="middle">2</text>
+
+        <!-- lista de archivos -->
+        <text x="20" y="208" font-family="system-ui" font-size="11.5" fill="#59636e">data/BASE_RRHH.xlsx · data/csv/… · etl/… · public/… · tests/…</text>
+        <text x="20" y="224" font-family="system-ui" font-size="11.5" fill="#1f883d" font-weight="700">43 archivos listos para subir</text>
+
+        <!-- commit -->
+        <rect x="20" y="240" width="860" height="1" fill="#d1d9e0"/>
+        <text x="20" y="262" font-family="system-ui" font-size="12.5" font-weight="700" fill="#1f2328">Commit changes</text>
+        <rect x="20" y="270" width="560" height="26" rx="5" fill="#fff" stroke="#8c959f"/>
+        <text x="30" y="287" font-family="system-ui" font-size="11.5" fill="#1f2328">Carga inicial del Dashboard de RRHH</text>
+        <circle cx="606" cy="283" r="13" fill="#b45f06"/>
+        <text x="606" y="288" font-family="system-ui" font-size="13" font-weight="700" fill="#fff" text-anchor="middle">3</text>
+
+        <rect x="20" y="306" width="132" height="26" rx="5" fill="#1f883d"/>
+        <text x="86" y="323" font-family="system-ui" font-size="12" fill="#fff" text-anchor="middle" font-weight="600">Commit changes</text>
+        <circle cx="178" cy="319" r="13" fill="#b45f06"/>
+        <text x="178" y="324" font-family="system-ui" font-size="13" font-weight="700" fill="#fff" text-anchor="middle">4</text>
+      </svg>
+      <figcaption>Pantalla de carga. El recuadro punteado ② acepta carpetas completas arrastradas.</figcaption>
+    </figure>
+
+    <div class="hallar">
+      <h4>Si no lo encuentras</h4>
+      <ul class="simple">
+        <li><strong>No veo "uploading an existing file".</strong> Es porque el repositorio ya tiene
+          archivos y esa pantalla de bienvenida desapareció. Usa el enlace directo de arriba, o:
+          pestaña <span class="btn-gris">Code</span> → botón
+          <span class="btn-gris">Add file ▾</span> (arriba a la derecha, junto al botón verde
+          <span class="btn-lit">Code</span>) → <strong>Upload files</strong>.</li>
+        <li><strong>Solo subió 5 o 6 archivos.</strong> Soltaste antes de que el navegador terminara
+          de leer las subcarpetas. Vuelve a arrastrar y espera a que la lista deje de crecer.</li>
+        <li><strong>Aparece una carpeta <code>dashboard-rrhh</code> dentro del repositorio.</strong>
+          Arrastraste la carpeta en vez de su contenido. Bórrala y repite: en el repositorio, clic en
+          la carpeta → botón <span class="btn-gris">⋯</span> → <strong>Delete directory</strong>.</li>
+        <li><strong>Dice que el archivo es muy grande.</strong> No debería pasar: el más grande es
+          <code>BASE_RRHH.xlsx</code> con unos 180 KB, y el límite de GitHub por archivo es 25 MB
+          en la carga web.</li>
+      </ul>
+    </div>
+
+    <div class="listo">
+      <h4>Verifica la estructura antes de seguir</h4>
+      <p>Diez segundos aquí evitan rehacer todo el trabajo. En la página del repositorio:</p>
+      <ul class="simple">
+        <li>Arriba de la lista deben aparecer <strong>5 renglones con icono de carpeta</strong>:
+          <code>data</code>, <code>etl</code>, <code>plantillas</code>, <code>public</code>,
+          <code>tests</code>. Las carpetas van primero, antes de los archivos.</li>
+        <li><strong>Haz clic en <code>public</code>.</strong> Adentro debe estar
+          <code>index.html</code> y una carpeta <code>assets</code>.</li>
+        <li>Abajo se ve el <code>README.md</code> renderizado, con el título
+          <em>Dashboard de RRHH — Minera Rio Tinto</em>.</li>
+      </ul>
+    </div>
+
+    <div class="hallar">
+      <h4>Señal de alarma: la estructura se aplanó</h4>
+      <p>Si en la raíz ves <code>index.html</code>, <code>app.js</code>, <code>styles.css</code>,
+      <code>build.py</code> o <code>BASE_RRHH.xlsx</code> <strong>sueltos, sin carpetas</strong>,
+      la carga perdió la estructura. <strong>No sigas al Paso 4</strong>: sobre una estructura
+      aplanada, nada del resto funciona. El tablero busca <code>public/index.html</code> y el ETL
+      busca <code>data/BASE_RRHH.xlsx</code>; si están en la raíz, no los encuentra.</p>
+      <p>La carga web de GitHub no tiene borrado masivo, y quitar 43 archivos uno por uno es peor que
+      empezar de nuevo. Como son datos demo y no hay nada que perder, <strong>lo más rápido es
+      borrar el repositorio y volver a crearlo</strong>:</p>
+      <ol class="pasos">
+        <li><strong>Settings → General</strong>, hasta abajo, zona roja <strong>Danger Zone</strong>
+          → <strong>Delete this repository</strong>. GitHub pide escribir el nombre completo para
+          confirmar.</li>
+        <li>Vuelve a crearlo igual que en el Paso 2, con el mismo nombre.</li>
+        <li>Repite este Paso 3 arrastrando <strong>las 5 carpetas cerradas</strong>, no su
+          contenido.</li>
+        <li>Verifica la estructura con la lista de arriba <em>antes</em> de pasar al Paso 4.</li>
+      </ol>
+      <p>Si prefieres no borrar el repositorio: con el repositorio abierto presiona la tecla
+      <span class="lit">.</span> (punto). Se abre un editor tipo VS Code dentro del navegador, donde
+      sí puedes seleccionar varios archivos y borrarlos de una vez, y arrastrar carpetas completas.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================= PASO 4 ================= -->
+<section class="paso">
+  <h2><span class="n">4</span> Crear el archivo de automatización <span class="t">≈ 3 min</span></h2>
+  <div class="cuerpo">
+
+    <p><strong>Por qué este paso es aparte.</strong> El archivo debe quedar en una carpeta llamada
+    <code>.github</code>. Las carpetas que empiezan con punto están ocultas en Windows y Mac, y el
+    navegador no las sube al arrastrar. Por eso se crea escribiendo la ruta a mano: GitHub crea las
+    carpetas solo.</p>
+
+    <p><strong>Empieza por aquí: la ruta por menú.</strong> Es la que funciona siempre, sin depender
+    de la URL ni del nombre de la rama. Desde la página principal de tu repositorio:</p>
+
+    <figure>
+      <svg viewBox="0 0 900 250" role="img" aria-label="Página principal del repositorio con el botón Add file">
+        <rect width="900" height="250" fill="#fff"/>
+        <rect x="0" y="0" width="900" height="34" fill="#f6f8fa"/>
+        <line x1="0" y1="34" x2="900" y2="34" stroke="#d1d9e0"/>
+        <text x="20" y="21" font-family="system-ui" font-size="12" fill="#24292f" font-weight="600">TU-USUARIO / dashboard-rrhh</text>
+        <g font-family="system-ui" font-size="11" fill="#24292f">
+          <text x="20" y="55" font-weight="700">Code</text><text x="62" y="55">Issues</text>
+          <text x="108" y="55">Pull requests</text><text x="188" y="55">Actions</text>
+          <text x="238" y="55">Projects</text><text x="292" y="55">Security</text>
+          <text x="348" y="55">Insights</text><text x="404" y="55">Settings</text>
+        </g>
+        <line x1="20" y1="62" x2="52" y2="62" stroke="#fd8c73" stroke-width="3"/>
+        <line x1="0" y1="66" x2="900" y2="66" stroke="#d1d9e0"/>
+
+        <!-- barra de rama + Add file + Code -->
+        <rect x="20" y="84" width="112" height="28" rx="6" fill="#f6f8fa" stroke="#d1d9e0"/>
+        <text x="32" y="103" font-family="system-ui" font-size="11.5" fill="#1f2328" font-weight="600">⑂ main  ▾</text>
+        <circle cx="152" cy="98" r="13" fill="#b45f06"/>
+        <text x="152" y="103" font-family="system-ui" font-size="13" font-weight="700" fill="#fff" text-anchor="middle">1</text>
+        <line x1="165" y1="98" x2="215" y2="98" stroke="#b45f06" stroke-width="2"/>
+        <text x="222" y="103" font-family="system-ui" font-size="11.5" font-weight="700" fill="#b45f06">Aquí dice cómo se llama tu rama</text>
+
+        <rect x="648" y="84" width="98" height="28" rx="6" fill="#f6f8fa" stroke="#d1d9e0"/>
+        <text x="697" y="103" font-family="system-ui" font-size="11.5" fill="#1f2328" text-anchor="middle" font-weight="600">Add file  ▾</text>
+        <rect x="754" y="84" width="86" height="28" rx="6" fill="#1f883d"/>
+        <text x="797" y="103" font-family="system-ui" font-size="11.5" fill="#fff" text-anchor="middle" font-weight="600">▾ Code</text>
+        <circle cx="697" cy="140" r="13" fill="#b45f06"/>
+        <text x="697" y="145" font-family="system-ui" font-size="13" font-weight="700" fill="#fff" text-anchor="middle">2</text>
+        <line x1="697" y1="127" x2="697" y2="115" stroke="#b45f06" stroke-width="2"/>
+        <text x="690" y="164" font-family="system-ui" font-size="11.5" font-weight="700" fill="#b45f06" text-anchor="end">Clic aquí → Create new file</text>
+
+        <!-- lista de archivos -->
+        <rect x="20" y="124" width="600" height="1" fill="#d1d9e0"/>
+        <g font-family="system-ui" font-size="11.5" fill="#0969da">
+          <text x="34" y="146">📁 data</text>
+          <text x="34" y="168">📁 etl</text>
+          <text x="34" y="190">📁 plantillas</text>
+          <text x="34" y="212">📁 public</text>
+          <text x="34" y="234">📁 tests</text>
+        </g>
+        <text x="200" y="146" font-family="system-ui" font-size="10.5" fill="#59636e">Carga inicial del Dashboard de RRHH</text>
+        <text x="640" y="200" font-family="system-ui" font-size="11" fill="#1f883d" font-weight="700">Si ves estas carpetas,</text>
+        <text x="640" y="216" font-family="system-ui" font-size="11" fill="#1f883d" font-weight="700">el Paso 3 quedó bien</text>
+      </svg>
+      <figcaption>El botón <em>Add file</em> ② está a la izquierda del botón verde <em>Code</em>, en
+      la misma barra que el selector de rama ①. En pantallas angostas se reduce a un
+      <span class="btn-gris">+</span>.</figcaption>
+    </figure>
+
+    <div class="ir">
+      <div class="et">Atajo, si prefieres pegar la URL</div>
+      <a class="url pendiente" data-url="https://github.com/{U}/dashboard-rrhh/new/main">
+        https://github.com/TU-USUARIO/dashboard-rrhh/new/main</a>
+      <p class="nota"><strong>Este atajo da 404 si el repositorio todavía no tiene archivos</strong>,
+      porque en ese estado no existe la rama <code>main</code>. Si te pasó eso, ve al bloque
+      <a href="#e404" style="font-family:inherit;font-size:inherit">¿Un enlace te dio 404?</a>
+      del inicio de esta guía: la causa está ahí.</p>
+    </div>
+
+    <figure>
+      <svg viewBox="0 0 900 330" role="img" aria-label="Editor de archivo nuevo en GitHub">
+        <rect width="900" height="330" fill="#fff"/>
+        <rect x="0" y="0" width="900" height="34" fill="#f6f8fa"/>
+        <line x1="0" y1="34" x2="900" y2="34" stroke="#d1d9e0"/>
+        <text x="20" y="21" font-family="system-ui" font-size="12" fill="#24292f" font-weight="600">TU-USUARIO / dashboard-rrhh</text>
+
+        <!-- migajas de ruta -->
+        <text x="20" y="62" font-family="system-ui" font-size="13" fill="#0969da" font-weight="600">dashboard-rrhh</text>
+        <text x="132" y="62" font-family="system-ui" font-size="13" fill="#59636e">/</text>
+        <text x="146" y="62" font-family="system-ui" font-size="13" fill="#0969da" font-weight="600">.github</text>
+        <text x="206" y="62" font-family="system-ui" font-size="13" fill="#59636e">/</text>
+        <text x="220" y="62" font-family="system-ui" font-size="13" fill="#0969da" font-weight="600">workflows</text>
+        <text x="300" y="62" font-family="system-ui" font-size="13" fill="#59636e">/</text>
+        <rect x="314" y="48" width="150" height="22" rx="5" fill="#fff" stroke="#0969da" stroke-width="1.5"/>
+        <text x="322" y="63" font-family="ui-monospace" font-size="11.5" fill="#1f2328">deploy.yml</text>
+        <circle cx="486" cy="59" r="13" fill="#b45f06"/>
+        <text x="486" y="64" font-family="system-ui" font-size="13" font-weight="700" fill="#fff" text-anchor="middle">1</text>
+        <line x1="499" y1="59" x2="552" y2="59" stroke="#b45f06" stroke-width="2"/>
+        <text x="560" y="64" font-family="system-ui" font-size="12" font-weight="700" fill="#b45f06">Aquí escribes la ruta completa</text>
+
+        <!-- editor -->
+        <rect x="20" y="82" width="860" height="26" rx="5" fill="#f6f8fa" stroke="#d1d9e0"/>
+        <text x="32" y="99" font-family="system-ui" font-size="11" fill="#59636e" font-weight="600">Edit new file      Preview</text>
+        <rect x="20" y="108" width="860" height="150" fill="#fff" stroke="#d1d9e0"/>
+        <g font-family="ui-monospace" font-size="10.5" fill="#1f2328">
+          <text x="46" y="126">name: Validar y publicar Dashboard de RRHH</text>
+          <text x="46" y="142">on:</text>
+          <text x="46" y="158">  push:</text>
+          <text x="46" y="174">    branches: [main]</text>
+          <text x="46" y="190">    paths:</text>
+          <text x="46" y="206">      - 'data/**'          # el libro de Excel vive aquí</text>
+          <text x="46" y="222">      - 'etl/**'</text>
+          <text x="46" y="238">      …</text>
+        </g>
+        <g font-family="ui-monospace" font-size="9" fill="#8b949e">
+          <text x="28" y="126">1</text><text x="28" y="142">2</text><text x="28" y="158">3</text>
+          <text x="28" y="174">4</text><text x="28" y="190">5</text><text x="28" y="206">6</text>
+          <text x="28" y="222">7</text><text x="28" y="238">8</text>
+        </g>
+        <circle cx="855" cy="130" r="13" fill="#b45f06"/>
+        <text x="855" y="135" font-family="system-ui" font-size="13" font-weight="700" fill="#fff" text-anchor="middle">2</text>
+
+        <rect x="20" y="284" width="132" height="26" rx="5" fill="#1f883d"/>
+        <text x="86" y="301" font-family="system-ui" font-size="12" fill="#fff" text-anchor="middle" font-weight="600">Commit changes…</text>
+        <circle cx="178" cy="297" r="13" fill="#b45f06"/>
+        <text x="178" y="302" font-family="system-ui" font-size="13" font-weight="700" fill="#fff" text-anchor="middle">3</text>
+      </svg>
+      <figcaption>Al escribir <code>.github/</code> y luego <code>workflows/</code>, cada barra
+      convierte lo anterior en carpeta y se dibuja arriba, como migajas de ruta.</figcaption>
+    </figure>
+
+    <ol class="pasos">
+      <li><strong>Add file ▾</strong> → <strong>Create new file</strong>. (O el atajo de arriba.)</li>
+      <li>Ya en el editor (segunda maqueta, abajo), en el campo del nombre ① escribe,
+        letra por letra:
+        <br><span class="lit">.github/workflows/deploy.yml</span>
+        <br>No copies y pegues si puedes evitarlo: al teclear cada <code>/</code> verás cómo GitHub
+        va creando la carpeta y moviendo el cursor. Así confirmas que quedó bien.</li>
+      <li>Abre el archivo <code>deploy.yml</code> del paquete con el Bloc de notas
+        (Windows) o TextEdit (Mac). No lo abras con Excel ni con Word.</li>
+      <li>Selecciona todo (<span class="lit">Ctrl+A</span> / <span class="lit">Cmd+A</span>),
+        copia, y pega en el editor grande ②.</li>
+      <li>No toques la indentación. YAML usa los espacios del inicio de cada línea para entender la
+        estructura: si "acomodas" el texto, deja de funcionar.</li>
+      <li>Botón <span class="btn-lit">Commit changes…</span> ③. Se abre una ventanita: escribe
+        <code>Agrega automatización de publicación</code> y confirma con
+        <span class="btn-lit">Commit changes</span>.</li>
+    </ol>
+
+    <div class="hallar">
+      <h4>Si no lo encuentras</h4>
+      <ul class="simple">
+        <li><strong>El atajo de la URL me da 404.</strong> Lo más probable es que el repositorio
+          todavía esté vacío: sin archivos no existe la rama <code>main</code>, y el enlace no
+          resuelve. Revisa el bloque
+          <a href="#e404" style="font-weight:700">¿Un enlace te dio 404?</a> del inicio; ahí está
+          la prueba de un paso para saber cuál de las causas es.</li>
+        <li><strong>No veo el botón "Add file".</strong> Está en la pestaña
+          <span class="btn-gris">Code</span>, en la misma barra del selector de rama, a la izquierda
+          del botón verde <span class="btn-lit">Code</span>. En pantallas angostas se convierte en un
+          <span class="btn-gris">+</span>.</li>
+        <li><strong>Escribí la ruta pero no se crearon las carpetas.</strong> Revisa que el punto
+          inicial esté ahí: es <code>.github</code>, no <code>github</code>. Si quedó mal, borra el
+          archivo y repite.</li>
+        <li><strong>Después de guardar no veo la carpeta <code>.github</code>.</strong> Sí está —
+          GitHub la lista al inicio, arriba de <code>data</code>. Si no aparece, recarga la página.</li>
+      </ul>
+    </div>
+
+    <div class="listo">
+      <h4>Cómo saber que quedó</h4>
+      <p>En la raíz del repositorio aparece la carpeta <code>.github</code>. Y en la pestaña
+      <span class="btn-gris">Actions</span> aparece una corrida nueva llamada
+      <em>Agrega automatización de publicación</em>: puede estar en amarillo (corriendo) o en rojo
+      (falló al publicar). Las dos cosas son normales en este punto, porque Pages todavía no está
+      activado. Eso es el Paso 5.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================= PASO 5 ================= -->
+<section class="paso">
+  <h2><span class="n">5</span> Activar GitHub Pages <span class="t">≈ 1 min</span></h2>
+  <div class="cuerpo">
+
+    <div class="ir">
+      <div class="et">Ir directo a esta pantalla</div>
+      <a class="url pendiente" data-url="https://github.com/{U}/dashboard-rrhh/settings/pages">
+        https://github.com/TU-USUARIO/dashboard-rrhh/settings/pages</a>
+      <p class="nota">Este es el paso que más se pierde en el menú, porque Pages está en la barra
+      lateral de Settings, bastante abajo.</p>
+    </div>
+
+    <figure>
+      <svg viewBox="0 0 900 330" role="img" aria-label="Pantalla de configuración de GitHub Pages">
+        <rect width="900" height="330" fill="#fff"/>
+        <rect x="0" y="0" width="900" height="34" fill="#f6f8fa"/>
+        <line x1="0" y1="34" x2="900" y2="34" stroke="#d1d9e0"/>
+        <text x="20" y="21" font-family="system-ui" font-size="12" fill="#24292f" font-weight="600">TU-USUARIO / dashboard-rrhh</text>
+        <g font-family="system-ui" font-size="11" fill="#24292f">
+          <text x="20" y="55">Code</text><text x="62" y="55">Issues</text>
+          <text x="108" y="55">Pull requests</text><text x="188" y="55">Actions</text>
+          <text x="238" y="55">Projects</text><text x="292" y="55">Security</text>
+          <text x="348" y="55">Insights</text>
+          <text x="404" y="55" font-weight="700">⚙ Settings</text>
+        </g>
+        <line x1="404" y1="62" x2="470" y2="62" stroke="#fd8c73" stroke-width="3"/>
+        <circle cx="492" cy="51" r="13" fill="#b45f06"/>
+        <text x="492" y="56" font-family="system-ui" font-size="13" font-weight="700" fill="#fff" text-anchor="middle">1</text>
+        <line x1="0" y1="66" x2="900" y2="66" stroke="#d1d9e0"/>
+
+        <!-- barra lateral -->
+        <rect x="20" y="80" width="188" height="230" fill="#fff"/>
+        <g font-family="system-ui" font-size="11.5" fill="#1f2328">
+          <text x="28" y="96">General</text>
+          <text x="28" y="120" font-size="10" fill="#59636e" font-weight="700">Access</text>
+          <text x="34" y="138">Collaborators</text>
+          <text x="34" y="156">Moderation options</text>
+          <text x="28" y="180" font-size="10" fill="#59636e" font-weight="700">Code and automation</text>
+          <text x="34" y="198">Branches</text>
+          <text x="34" y="216">Tags</text>
+          <text x="34" y="234">Rules</text>
+          <text x="34" y="252">Actions</text>
+          <text x="34" y="270">Webhooks</text>
+          <text x="34" y="288" font-weight="700">Pages</text>
+        </g>
+        <rect x="24" y="278" width="184" height="18" rx="4" fill="#ddf4ff"/>
+        <text x="34" y="291" font-family="system-ui" font-size="11.5" fill="#0969da" font-weight="700">Pages</text>
+        <circle cx="232" cy="287" r="13" fill="#b45f06"/>
+        <text x="232" y="292" font-family="system-ui" font-size="13" font-weight="700" fill="#fff" text-anchor="middle">2</text>
+        <line x1="208" y1="80" x2="208" y2="310" stroke="#d1d9e0"/>
+
+        <!-- panel derecho -->
+        <text x="260" y="98" font-family="system-ui" font-size="17" font-weight="700" fill="#1f2328">GitHub Pages</text>
+        <line x1="260" y1="108" x2="880" y2="108" stroke="#d1d9e0"/>
+        <text x="260" y="132" font-family="system-ui" font-size="13" font-weight="700" fill="#1f2328">Build and deployment</text>
+        <text x="260" y="156" font-family="system-ui" font-size="12" font-weight="600" fill="#1f2328">Source</text>
+        <rect x="260" y="164" width="240" height="30" rx="6" fill="#f6f8fa" stroke="#d1d9e0"/>
+        <text x="272" y="184" font-family="system-ui" font-size="12.5" fill="#1f2328" font-weight="600">GitHub Actions</text>
+        <text x="482" y="184" font-family="system-ui" font-size="11" fill="#59636e">▾</text>
+        <circle cx="524" cy="179" r="13" fill="#b45f06"/>
+        <text x="524" y="184" font-family="system-ui" font-size="13" font-weight="700" fill="#fff" text-anchor="middle">3</text>
+        <line x1="537" y1="179" x2="600" y2="179" stroke="#b45f06" stroke-width="2"/>
+        <text x="608" y="184" font-family="system-ui" font-size="12" font-weight="700" fill="#b45f06">Elige esta opción</text>
+
+        <text x="260" y="222" font-family="system-ui" font-size="11.5" fill="#59636e">Al elegir “GitHub Actions” desaparecen las opciones de rama y carpeta.</text>
+        <text x="260" y="240" font-family="system-ui" font-size="11.5" fill="#59636e">Eso es lo correcto: no hay que elegir nada más, ni hay botón de guardar.</text>
+      </svg>
+      <figcaption>Settings ① → barra lateral, sección <em>Code and automation</em> → Pages ② →
+      desplegable <em>Source</em> ③.</figcaption>
+    </figure>
+
+    <ol class="pasos">
+      <li>Pestaña <span class="btn-gris">⚙ Settings</span> ①. Está en la fila de pestañas del
+        repositorio, al final, después de <em>Insights</em>. <strong>No la confundas</strong> con la
+        configuración de tu cuenta, que está en el menú de tu foto de perfil, arriba a la derecha.</li>
+      <li>En la barra lateral izquierda, baja hasta el bloque <strong>Code and automation</strong> y
+        haz clic en <strong>Pages</strong> ②.</li>
+      <li>En <strong>Build and deployment → Source</strong> ③, abre el desplegable y elige
+        <strong>GitHub Actions</strong>. Por defecto viene en <em>Deploy from a branch</em>.</li>
+    </ol>
+
+    <div class="hallar">
+      <h4>Si no lo encuentras</h4>
+      <ul class="simple">
+        <li><strong>No veo la pestaña Settings.</strong> Solo aparece si eres dueño o administrador
+          del repositorio. Si lo creaste tú, ahí está — puede estar escondida detrás de un
+          <span class="btn-gris">⋯</span> en pantallas angostas.</li>
+        <li><strong>No veo "Pages" en la barra lateral.</strong> Hay que bajar: la lista es larga.
+          Está entre <em>Webhooks</em> y <em>Environments</em>. Usa el enlace directo de arriba.</li>
+        <li><strong>Dice que Pages no está disponible.</strong> Pasa si el repositorio es privado en
+          plan gratuito. Ponlo en público: <em>Settings → General → Danger Zone → Change repository
+          visibility</em>.</li>
+        <li><strong>No encuentro dónde guardar.</strong> No hay botón. El cambio se aplica al
+          seleccionar la opción del desplegable.</li>
+      </ul>
+    </div>
+
+    <div class="listo">
+      <h4>Cómo saber que quedó</h4>
+      <p>La misma pantalla muestra el desplegable en <strong>GitHub Actions</strong> y, tras la
+      primera publicación, una franja arriba con
+      <em>"Your site is live at https://…"</em> y un botón <span class="btn-gris">Visit site</span>.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================= PASO 6 ================= -->
+<section class="paso">
+  <h2><span class="n">6</span> Correr la publicación <span class="t">≈ 4 min de espera</span></h2>
+  <div class="cuerpo">
+
+    <div class="ir">
+      <div class="et">Ir directo a esta pantalla</div>
+      <a class="url pendiente" data-url="https://github.com/{U}/dashboard-rrhh/actions">
+        https://github.com/TU-USUARIO/dashboard-rrhh/actions</a>
+    </div>
+
+    <figure>
+      <svg viewBox="0 0 900 320" role="img" aria-label="Pestaña Actions con el botón Run workflow">
+        <rect width="900" height="320" fill="#fff"/>
+        <rect x="0" y="0" width="900" height="34" fill="#f6f8fa"/>
+        <line x1="0" y1="34" x2="900" y2="34" stroke="#d1d9e0"/>
+        <text x="20" y="21" font-family="system-ui" font-size="12" fill="#24292f" font-weight="600">TU-USUARIO / dashboard-rrhh</text>
+        <g font-family="system-ui" font-size="11" fill="#24292f">
+          <text x="20" y="55">Code</text><text x="62" y="55">Issues</text>
+          <text x="108" y="55">Pull requests</text>
+          <text x="188" y="55" font-weight="700">▷ Actions</text>
+          <text x="248" y="55">Projects</text><text x="302" y="55">Security</text>
+        </g>
+        <line x1="188" y1="62" x2="240" y2="62" stroke="#fd8c73" stroke-width="3"/>
+        <circle cx="262" cy="51" r="13" fill="#b45f06"/>
+        <text x="262" y="56" font-family="system-ui" font-size="13" font-weight="700" fill="#fff" text-anchor="middle">1</text>
+        <line x1="0" y1="66" x2="900" y2="66" stroke="#d1d9e0"/>
+
+        <!-- lateral -->
+        <text x="20" y="92" font-family="system-ui" font-size="11" fill="#59636e" font-weight="700">Workflows</text>
+        <rect x="16" y="100" width="212" height="20" rx="4" fill="#ddf4ff"/>
+        <text x="24" y="114" font-family="system-ui" font-size="11" fill="#0969da" font-weight="700">Validar y publicar Dashboard…</text>
+        <circle cx="252" cy="110" r="13" fill="#b45f06"/>
+        <text x="252" y="115" font-family="system-ui" font-size="13" font-weight="700" fill="#fff" text-anchor="middle">2</text>
+        <line x1="238" y1="80" x2="238" y2="300" stroke="#d1d9e0"/>
+
+        <!-- panel -->
+        <text x="286" y="96" font-family="system-ui" font-size="14" font-weight="700" fill="#1f2328">Validar y publicar Dashboard de RRHH</text>
+        <rect x="286" y="108" width="594" height="34" rx="6" fill="#ddf4ff" stroke="#54aeff"/>
+        <text x="298" y="129" font-family="system-ui" font-size="11.5" fill="#1f2328">This workflow has a workflow_dispatch event trigger.</text>
+        <rect x="742" y="114" width="128" height="22" rx="5" fill="#f6f8fa" stroke="#d1d9e0"/>
+        <text x="806" y="129" font-family="system-ui" font-size="11" fill="#24292f" text-anchor="middle" font-weight="600">Run workflow ▾</text>
+        <circle cx="806" cy="158" r="13" fill="#b45f06"/>
+        <text x="806" y="163" font-family="system-ui" font-size="13" font-weight="700" fill="#fff" text-anchor="middle">3</text>
+
+        <!-- corridas -->
+        <rect x="286" y="184" width="594" height="34" fill="#fff" stroke="#d1d9e0"/>
+        <circle cx="304" cy="201" r="7" fill="#1f883d"/>
+        <text x="300" y="205" font-family="system-ui" font-size="9" fill="#fff">✓</text>
+        <text x="320" y="199" font-family="system-ui" font-size="11.5" fill="#1f2328" font-weight="600">Agrega automatización de publicación</text>
+        <text x="320" y="212" font-family="system-ui" font-size="10" fill="#59636e">main · hace 2 minutos · 3m 41s</text>
+
+        <rect x="286" y="218" width="594" height="34" fill="#fff" stroke="#d1d9e0"/>
+        <circle cx="304" cy="235" r="7" fill="#bf8700"/>
+        <text x="320" y="233" font-family="system-ui" font-size="11.5" fill="#1f2328" font-weight="600">Carga inicial del Dashboard de RRHH</text>
+        <text x="320" y="246" font-family="system-ui" font-size="10" fill="#59636e">main · en curso</text>
+
+        <text x="286" y="278" font-family="system-ui" font-size="11" fill="#59636e">Verde ✓ = terminó bien   ·   Amarillo ● = corriendo   ·   Rojo ✕ = falló, haz clic para ver por qué</text>
+      </svg>
+      <figcaption>El botón <em>Run workflow</em> ③ aparece solo cuando entras al workflow por su
+      nombre en la barra lateral ②, no en la lista general de corridas.</figcaption>
+    </figure>
+
+    <ol class="pasos">
+      <li>Pestaña <span class="btn-gris">▷ Actions</span> ①.</li>
+      <li>Si la corrida que se disparó en el Paso 4 quedó en <strong>rojo</strong>, es normal:
+        arrancó antes de que activaras Pages. Hay que volverla a lanzar.</li>
+      <li>En la barra lateral izquierda, clic en el nombre del workflow:
+        <strong>Validar y publicar Dashboard de RRHH</strong> ②.</li>
+      <li>Aparece una franja azul con el botón <span class="btn-gris">Run workflow ▾</span> ③.
+        Clic ahí, luego en el botón verde <span class="btn-lit">Run workflow</span> del panelito que
+        se abre.</li>
+      <li>Recarga la página. Aparece una corrida nueva en amarillo. Haz clic para ver el avance.</li>
+    </ol>
+
+    <table>
+      <thead><tr><th>Trabajo</th><th>Qué hace</th><th>Cuánto tarda</th></tr></thead>
+      <tbody>
+        <tr><td><strong>verificar</strong></td>
+            <td>Lee el libro de Excel, valida encabezados, tipos, llaves y reglas de negocio;
+                corre 22 pruebas de datos, 28 de KPI y 23 de interfaz en un navegador real</td>
+            <td>3–4 min la primera vez</td></tr>
+        <tr><td><strong>publicar</strong></td>
+            <td>Sube el sitio a GitHub Pages</td><td>≈ 30 seg</td></tr>
+      </tbody>
+    </table>
+
+    <div class="hallar">
+      <h4>Si no lo encuentras</h4>
+      <ul class="simple">
+        <li><strong>No veo el botón "Run workflow".</strong> Estás en la lista general de corridas.
+          Tienes que entrar primero al workflow por su nombre, en la barra lateral izquierda ②.</li>
+        <li><strong>La pestaña Actions está vacía.</strong> El archivo del Paso 4 no quedó en la ruta
+          correcta. Revisa que exista <code>.github/workflows/deploy.yml</code> — con el punto, y
+          <code>workflows</code> en plural.</li>
+        <li><strong>Dice "Workflows aren't being run on this repository".</strong> Actions está
+          desactivado: <em>Settings → Actions → General → Allow all actions and reusable
+          workflows</em>.</li>
+        <li><strong>Falló y no sé por qué.</strong> Clic en la corrida roja → clic en el trabajo
+          <strong>verificar</strong> → busca el paso con la ✕ roja y ábrelo. El error de datos te
+          dice hoja y fila, por ejemplo
+          <code>[hoja fact_ausentismo fila 148] regla violada: …</code></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ================= PASO 7 ================= -->
+<section class="paso">
+  <h2><span class="n">7</span> Abrir el tablero <span class="t">≈ 1 min</span></h2>
+  <div class="cuerpo">
+    <div class="ir">
+      <div class="et">Tu tablero publicado</div>
+      <a class="url pendiente" data-url="https://{U}.github.io/dashboard-rrhh/">
+        https://TU-USUARIO.github.io/dashboard-rrhh/</a>
+      <p class="nota">Ojo: es <code>github.io</code>, no <code>github.com</code>. Guarda este enlace
+      en favoritos, es la dirección definitiva del tablero.</p>
+    </div>
+
+    <p>También la encuentras en tres lugares del repositorio:</p>
+    <ul class="simple">
+      <li><strong>Actions</strong> → la corrida → trabajo <strong>publicar</strong> → el resumen
+        muestra la URL.</li>
+      <li><strong>Settings → Pages</strong> → franja de arriba, botón
+        <span class="btn-gris">Visit site</span>.</li>
+      <li>Pestaña <strong>Code</strong> → panel derecho, sección <strong>Deployments</strong> →
+        <em>github-pages</em>.</li>
+    </ul>
+
+    <div class="hallar">
+      <h4>Si te da 404</h4>
+      <ul class="simple">
+        <li>Espera un minuto y recarga. La primera publicación tarda en propagarse.</li>
+        <li>Revisa que el trabajo <strong>publicar</strong> haya terminado en verde.</li>
+        <li>Verifica la diagonal final: <code>/dashboard-rrhh/</code> con diagonal al cierre.</li>
+        <li>Confirma que el nombre del repositorio en la URL sea exactamente el que creaste,
+          respetando mayúsculas y guiones.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ================= PASO 8 ================= -->
+<section class="paso">
+  <h2><span class="n">8</span> Verificar que quedó bien <span class="t">≈ 2 min</span></h2>
+  <div class="cuerpo">
+    <p>Recorre esta lista en el tablero abierto. Si algo falla, la última sección de esta guía tiene
+    el diagnóstico.</p>
+    <ul class="check">
+      <li>El encabezado dice <strong>Cierre julio 2026</strong> y muestra un <code>commit</code>
+        de 7 caracteres.</li>
+      <li>Aparece la franja naranja de <strong>Datos de demostración</strong>.</li>
+      <li>Las tarjetas muestran números, no guiones.</li>
+      <li>Las cinco pestañas abren sin error: Resumen ejecutivo · Plantilla, rotación y ausentismo ·
+        Nómina y costo laboral · Capacitación y relaciones laborales · Base de datos.</li>
+      <li>En <strong>Resumen ejecutivo</strong>, la matriz tiene encabezado negro y las filas en
+        verde, naranja y gris.</li>
+      <li>En <strong>Base de datos</strong>, la trazabilidad dice
+        <code>fuente: data/BASE_RRHH.xlsx (libro de Excel)</code>.</li>
+      <li>Al pasar el cursor sobre una gráfica sale el globo con los valores.</li>
+      <li>Al hacer clic en un chip de unidad, los números cambian.</li>
+      <li>El botón <strong>Ver tabla</strong> de cualquier gráfica muestra los datos en tabla.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ================= RUTINA MENSUAL ================= -->
+<section class="paso">
+  <h2><span class="n">↻</span> Rutina mensual: subir el cierre <span class="t">≈ 5 min + captura</span></h2>
+  <div class="cuerpo">
+    <p>El trabajo del mes se hace <strong>en Excel</strong>. GitHub solo recibe el archivo.</p>
+
+    <h3 style="font-size:14.5px;margin:18px 0 8px">a) Bajar el libro</h3>
+    <div class="ir">
+      <div class="et">Descarga directa del libro</div>
+      <a class="url pendiente" data-url="https://github.com/{U}/dashboard-rrhh/raw/main/data/BASE_RRHH.xlsx">
+        https://github.com/TU-USUARIO/dashboard-rrhh/raw/main/data/BASE_RRHH.xlsx</a>
+      <p class="nota">Baja el libro del repositorio cada mes antes de capturar, en lugar de trabajar
+      sobre una copia vieja de tu computadora. Así partes de lo último publicado y no pisas lo que
+      haya cargado alguien más del equipo.</p>
+    </div>
+
+    <figure>
+      <svg viewBox="0 0 900 200" role="img" aria-label="Vista de un archivo con el botón de descarga">
+        <rect width="900" height="200" fill="#fff"/>
+        <rect x="0" y="0" width="900" height="34" fill="#f6f8fa"/>
+        <line x1="0" y1="34" x2="900" y2="34" stroke="#d1d9e0"/>
+        <text x="20" y="21" font-family="system-ui" font-size="12" fill="#24292f" font-weight="600">TU-USUARIO / dashboard-rrhh</text>
+        <text x="20" y="60" font-family="system-ui" font-size="13" fill="#0969da" font-weight="600">dashboard-rrhh</text>
+        <text x="124" y="60" font-family="system-ui" font-size="13" fill="#59636e">/</text>
+        <text x="134" y="60" font-family="system-ui" font-size="13" fill="#0969da" font-weight="600">data</text>
+        <text x="170" y="60" font-family="system-ui" font-size="13" fill="#59636e">/</text>
+        <text x="180" y="60" font-family="system-ui" font-size="13" fill="#1f2328" font-weight="700">BASE_RRHH.xlsx</text>
+
+        <rect x="20" y="76" width="860" height="34" rx="6" fill="#f6f8fa" stroke="#d1d9e0"/>
+        <text x="32" y="97" font-family="system-ui" font-size="11.5" fill="#59636e">Preview   ·   Code   ·   Blame</text>
+        <text x="700" y="97" font-family="system-ui" font-size="11.5" fill="#59636e">180 KB</text>
+        <rect x="760" y="82" width="24" height="22" rx="5" fill="#f6f8fa" stroke="#d1d9e0"/>
+        <text x="772" y="97" font-family="system-ui" font-size="12" fill="#24292f" text-anchor="middle">⤓</text>
+        <rect x="790" y="82" width="24" height="22" rx="5" fill="#f6f8fa" stroke="#d1d9e0"/>
+        <text x="802" y="97" font-family="system-ui" font-size="12" fill="#24292f" text-anchor="middle">✎</text>
+        <circle cx="772" cy="132" r="13" fill="#b45f06"/>
+        <text x="772" y="137" font-family="system-ui" font-size="13" font-weight="700" fill="#fff" text-anchor="middle">1</text>
+        <line x1="759" y1="132" x2="640" y2="132" stroke="#b45f06" stroke-width="2"/>
+        <text x="632" y="137" font-family="system-ui" font-size="12" font-weight="700" fill="#b45f06" text-anchor="end">Download raw file</text>
+
+        <text x="20" y="150" font-family="system-ui" font-size="11.5" fill="#59636e">(Los .xlsx no se pueden ver dentro de GitHub: hay que descargarlos.)</text>
+      </svg>
+      <figcaption>Si prefieres navegar: carpeta <code>data</code> → clic en
+      <code>BASE_RRHH.xlsx</code> → icono de descarga ① (una flecha hacia abajo, arriba a la
+      derecha del recuadro del archivo).</figcaption>
+    </figure>
+
+    <h3 style="font-size:14.5px;margin:18px 0 8px">b) Capturar en Excel</h3>
+    <p>Abre el libro y, en cada hoja <code>fact_*</code>, agrega las filas del mes nuevo con su
+    <code>periodo</code> — por ejemplo <code>2026-08</code>.</p>
+    <ul class="simple">
+      <li><strong>Agregar filas, no sobrescribir.</strong> El tablero calcula rotación y las demás
+        tasas anualizadas con ventana móvil de 12 meses: si borras historia, esos indicadores dejan
+        de poder calcularse.</li>
+      <li>Usa los <strong>desplegables</strong> de <code>unidad_id</code>, <code>area_id</code>,
+        <code>tipo_relacion</code> y <code>turno</code> en lugar de escribir a mano.</li>
+      <li>Revisa la hoja <strong>LEEME</strong>: el bloque <em>Registros cargados</em> te dice
+        cuántas filas quedaron en cada hoja.</li>
+      <li>Guarda como <strong>.xlsx</strong> y <strong>con el mismo nombre</strong>:
+        <code>BASE_RRHH.xlsx</code>.</li>
+    </ul>
+
+    <h3 style="font-size:14.5px;margin:18px 0 8px">c) Subir el libro</h3>
+    <div class="ir">
+      <div class="et">Ir directo a la carga</div>
+      <a class="url pendiente" data-url="https://github.com/{U}/dashboard-rrhh/upload/main/data">
+        https://github.com/TU-USUARIO/dashboard-rrhh/upload/main/data</a>
+      <p class="nota">Este enlace abre la carga <strong>ya dentro de la carpeta <code>data</code></strong>,
+      que es donde debe caer el libro. Si subes el archivo en la raíz del repositorio, el tablero no
+      lo encuentra.</p>
+    </div>
+    <ol class="pasos">
+      <li>Arrastra tu <code>BASE_RRHH.xlsx</code> al recuadro punteado. GitHub reemplaza el anterior
+        porque tiene el mismo nombre.</li>
+      <li>Verifica que arriba diga la ruta <code>dashboard-rrhh / data /</code>.</li>
+      <li>Mensaje del commit: <code>Cierre 2026-08</code>.</li>
+      <li><span class="btn-lit">Commit changes</span>. Actions valida y republica solo en un par de
+        minutos.</li>
+    </ol>
+
+    <h3 style="font-size:14.5px;margin:18px 0 8px">d) Revisar qué cambió</h3>
+    <div class="ir">
+      <div class="et">Historial legible del cierre</div>
+      <a class="url pendiente" data-url="https://github.com/{U}/dashboard-rrhh/commits/main/data/csv">
+        https://github.com/TU-USUARIO/dashboard-rrhh/commits/main/data/csv</a>
+    </div>
+    <p>Un <code>.xlsx</code> es binario: GitHub puede guardarlo, pero no mostrarte qué cambió
+    adentro. Por eso el proceso exporta los datos a <code>data/csv/</code> en cada corrida. Ahí
+    puedes ver, línea por línea, qué número cambió en cada cierre y quién lo cambió.
+    <strong>No edites esos CSV</strong>: se regeneran solos.</p>
+  </div>
+</section>
+
+<!-- ================= PROBLEMAS ================= -->
+<section class="paso">
+  <h2><span class="n">⚠</span> Diagnóstico rápido</h2>
+  <div class="cuerpo">
+    <table>
+      <thead><tr><th style="width:26%">Lo que ves</th><th style="width:30%">Causa probable</th><th>Qué hacer</th></tr></thead>
+      <tbody>
+        <tr><td>Los archivos quedaron sueltos en la raíz, sin carpetas</td>
+            <td>La carga aplanó la estructura: se seleccionaron los archivos de dentro de cada
+                carpeta, o se usó <em>choose your files</em> en vez de arrastrar</td>
+            <td>Borra el repositorio y repite el Paso 3 arrastrando las 5 carpetas cerradas. Ver
+                "Señal de alarma" en el Paso 3</td></tr>
+        <tr><td>Un enlace de esta guía da 404</td>
+            <td>Usuario o nombre de repositorio distintos, o el repositorio está vacío y no existe
+                la rama <code>main</code></td>
+            <td>Ve al bloque <a href="#e404" style="font-weight:700">¿Un enlace te dio 404?</a> del
+                inicio de la guía: la prueba de un paso te dice cuál de las dos es</td></tr>
+        <tr><td>La pestaña Actions no muestra nada</td>
+            <td>El archivo del Paso 4 no quedó en la ruta correcta</td>
+            <td>Verifica que exista <code>.github/workflows/deploy.yml</code>. Con punto inicial y
+                <code>workflows</code> en plural. Si quedó <code>deploy.yml</code> en la raíz,
+                bórralo y repite el Paso 4</td></tr>
+        <tr><td><code>Get Pages site failed</code></td>
+            <td>Falta el Paso 5</td>
+            <td>Settings → Pages → Source: <strong>GitHub Actions</strong>. Luego vuelve a lanzar
+                el workflow</td></tr>
+        <tr><td>El workflow se ve como texto y no arranca</td>
+            <td>Se alteró la indentación al pegar el YAML</td>
+            <td>Borra el archivo y repite el Paso 4 copiando de nuevo, sin reformatear</td></tr>
+        <tr><td>404 al abrir el tablero</td>
+            <td>El trabajo <em>publicar</em> no terminó, o falta propagación</td>
+            <td>Revisa que ambos trabajos estén en verde y espera un minuto</td></tr>
+        <tr><td>La página carga pero dice que no pudo cargar la base de datos</td>
+            <td>Los archivos quedaron un nivel más abajo</td>
+            <td>En la raíz del repo deben verse <code>data</code>, <code>etl</code>,
+                <code>public</code>. Si ves una carpeta <code>dashboard-rrhh</code>, repite el
+                Paso 3 subiendo el contenido, no la carpeta</td></tr>
+        <tr><td>El tablero se ve sin colores ni formato</td>
+            <td>No subió <code>public/assets/styles.css</code></td>
+            <td>Repite el Paso 3 esperando a que el navegador termine de leer las subcarpetas</td></tr>
+        <tr><td><code>no tiene las hojas: …</code></td>
+            <td>Se renombró o borró una hoja del libro</td>
+            <td>Los nombres de hoja deben ser exactos. Baja el libro del repositorio y captura
+                sobre ese</td></tr>
+        <tr><td><code>periodo inválido '2026-08-01 00:00:00'</code></td>
+            <td>Excel convirtió el periodo en fecha</td>
+            <td>Selecciona la columna → Formato de celdas → <strong>Texto</strong> → vuelve a
+                escribir el valor</td></tr>
+        <tr><td><code>encabezados incorrectos</code></td>
+            <td>Se renombró o movió una columna</td>
+            <td>Restaura el nombre y el orden exactos. Lo más seguro es bajar el libro del
+                repositorio y volver a capturar</td></tr>
+        <tr><td><code>'unidad_id' = 'U07' no existe en dim_unidad</code></td>
+            <td>Se usó una clave que no está en el catálogo</td>
+            <td>Agrega primero la unidad a la hoja <code>dim_unidad</code>, después úsala</td></tr>
+        <tr><td><code>llave duplicada (…)</code></td>
+            <td>Se repitió una fila</td>
+            <td>Borra la fila repetida. Cada combinación de llave va una sola vez</td></tr>
+      </tbody>
+    </table>
+
+    <div class="listo">
+      <h4>Recuerda</h4>
+      <p>Si la validación falla, el tablero <strong>no se actualiza</strong> y conserva el cierre
+      anterior. Es a propósito: es mejor llegar al comité con el dato del mes pasado que con un dato
+      equivocado. Corriges la celda, vuelves a subir el libro, y listo.</p>
+    </div>
+  </div>
+</section>
+
+<div class="aviso">
+  <strong>Repositorio público.</strong> Mientras el repositorio sea público, carga únicamente el
+  libro con los datos demo. GitHub Pages en repositorio privado requiere plan GitHub Team o
+  superior; el <code>README.md</code> del repositorio tiene la sección
+  <em>Seguridad de los datos</em> con la ruta de migración.
+</div>
+
+<div class="pie">
+  Dashboard de RRHH · Minera Rio Tinto · Guía visual de instalación en GitHub.<br>
+  Las maquetas de esta guía son representaciones esquemáticas de las pantallas de GitHub, hechas
+  para ubicar cada botón; la interfaz real puede verse ligeramente distinta y está en inglés.
+</div>
+
+</main>
+
+<script>
+(function () {
+  var input = document.getElementById('usuario');
+  var hint = document.getElementById('hint');
+  var enlaces = Array.prototype.slice.call(document.querySelectorAll('a.url'));
+
+  function limpiar(v) {
+    // Acepta que peguen la URL completa del perfil o del repo y extrae el usuario.
+    v = (v || '').trim();
+    var m = v.match(/github\.com\/([^\/\s]+)/i) || v.match(/^([^\/\s]+)\.github\.io/i);
+    if (m) v = m[1];
+    return v.replace(/^@/, '').replace(/[^A-Za-z0-9-]/g, '');
+  }
+
+  // Las maquetas también dicen TU-USUARIO: se personalizan igual, para que la
+  // pantalla dibujada coincida con la que el usuario tiene enfrente.
+  var textos = Array.prototype.slice
+    .call(document.querySelectorAll('figure svg text, figure svg tspan'))
+    .filter(function (n) { return n.textContent.indexOf('TU-USUARIO') !== -1; })
+    .map(function (n) { return { nodo: n, original: n.textContent }; });
+
+  function pintar() {
+    var u = limpiar(input.value);
+    textos.forEach(function (t) {
+      t.nodo.textContent = t.original.replace(/TU-USUARIO/g, u || 'TU-USUARIO');
+    });
+    enlaces.forEach(function (a) {
+      var plantilla = a.getAttribute('data-url');
+      if (u) {
+        var url = plantilla.replace('{U}', u);
+        a.href = url;
+        a.textContent = url;
+        a.target = '_blank';
+        a.rel = 'noopener';
+        a.classList.remove('pendiente');
+      } else {
+        a.removeAttribute('href');
+        a.textContent = plantilla.replace('{U}', 'TU-USUARIO');
+        a.classList.add('pendiente');
+      }
+    });
+    if (u) {
+      hint.textContent = 'Enlaces listos para ' + u + '. Se abren en una pestaña nueva.';
+      hint.className = 'ok';
+    } else {
+      hint.textContent = 'Escríbelo y todos los enlaces de la guía quedan listos para hacer clic.';
+      hint.className = 'hint';
+    }
+  }
+
+  input.addEventListener('input', pintar);
+  pintar();
+})();
+</script>
+</body>
+</html>

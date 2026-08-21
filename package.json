@@ -1,0 +1,21 @@
+{
+  "name": "dashboard-rrhh",
+  "version": "1.0.0",
+  "description": "Dashboard de RRHH para operación minera multi-unidad — Minera Rio Tinto",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "demo": "python3 etl/seed_demo.py",
+    "build": "python3 etl/build.py",
+    "plantillas": "python3 etl/plantillas.py",
+    "test": "node --test \"tests/**/*.test.mjs\"",
+    "test:e2e": "node tests/e2e.mjs",
+    "test:e2e:capturas": "node tests/e2e.mjs --capturas",
+    "test:todo": "npm run build && npm test && npm run test:e2e",
+    "servir": "python3 -m http.server 8000 --directory public",
+    "standalone": "python3 etl/standalone.py"
+  },
+  "devDependencies": {
+    "playwright": "^1.56.0"
+  }
+}
