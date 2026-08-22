@@ -195,6 +195,36 @@ select {
   color: var(--ink-1);
 }
 
+/* Alcance actual del filtro, junto a la etiqueta: "todas (8)" o "2 de 8".
+   Es lo que distingue "no he filtrado" de "no hay nada seleccionado". */
+.campo label .alcance {
+  margin-left: 6px;
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 400;
+  color: var(--ink-3);
+}
+
+/* La regla del clic, siempre visible. Ocupa el ancho completo de la barra
+   para quedar debajo de los tres campos, no apretada entre ellos. */
+.filtros-ayuda {
+  flex: 1 0 100%;
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: var(--ink-3);
+}
+
+.filtros-ayuda kbd {
+  font: inherit;
+  font-size: 11px;
+  padding: 1px 4px;
+  border: 1px solid var(--linea-fuerte);
+  border-bottom-width: 2px;
+  border-radius: 3px;
+  background: var(--superficie);
+  color: var(--ink-2);
+}
+
 .chips { display: flex; gap: 4px; flex-wrap: wrap; }
 
 .chip {
