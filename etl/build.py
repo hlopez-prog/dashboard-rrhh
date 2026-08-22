@@ -48,12 +48,16 @@ def a_columnar(tabla, filas):
         registro = []
         for col, tipo in columnas:
             v = fila.get(col, "")
-            if tipo in ("s", "p"):
+            if v is None or (isinstance(v, str) and v.strip() == ""):
+                # null en el JSON: el tablero lo distingue de un cero y lo
+                # muestra como "—" en lugar de contarlo como dato.
+                registro.append(None)
+            elif tipo in ("s", "p"):
                 registro.append(str(v).strip())
             elif tipo == "i":
-                registro.append(int(v or 0))
+                registro.append(int(v))
             else:
-                registro.append(round(float(v or 0), 4))
+                registro.append(round(float(v), 4))
         salida.append(registro)
     return {"columnas": [c for c, _ in columnas], "filas": salida}
 
@@ -115,11 +119,26 @@ def main():
     print("\nPaso 4/4 · Verificando integridad del JSON")
     with open(ruta, encoding="utf-8") as f:
         vuelta = json.load(f)
+
+    # Sin dimensiones ni plantilla no hay tablero: eso sí es un error.
+    # Una hoja de hechos vacía, en cambio, es un módulo que todavía no se
+    # captura. El tablero lo muestra como "—", que es la verdad. Abortar
+    # aquí obligaría a inventar un mes de nómina para poder publicar.
+    IMPRESCINDIBLES = ("unidad", "area", "plantilla")
+    vacias = []
     for nombre, t in vuelta["tablas"].items():
-        assert t["filas"], f"tabla '{nombre}' quedó vacía en el JSON"
+        if not t["filas"]:
+            if nombre in IMPRESCINDIBLES:
+                raise SystemExit(f"La tabla '{nombre}' quedó vacía y sin ella "
+                                 f"no se puede construir el tablero.")
+            vacias.append(nombre)
         assert all(len(r) == len(t["columnas"]) for r in t["filas"]), \
             f"tabla '{nombre}' con filas de ancho inconsistente"
-    print("  ✓ JSON consistente\n✓ Build completo.")
+    print("  ✓ JSON consistente")
+    if vacias:
+        print(f"  · sin capturar todavía: {', '.join(vacias)}")
+        print("    esos indicadores se publican como “—”, no como cero")
+    print("✓ Build completo.")
     return 0
 
 

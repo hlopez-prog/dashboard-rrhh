@@ -54,15 +54,26 @@ def _cargar_csv():
         "ORG_NOMBRE", "Minera Rio Tinto")}
 
 
-def cargar():
-    """Devuelve (tablas, config, fuente)."""
-    if os.path.exists(excel.LIBRO):
-        tablas, config = excel.leer()
-        return tablas, config, "excel"
+def cargar(libro=None):
+    """
+    Devuelve (tablas, config, fuente).
+
+    `libro` permite revisar un archivo cualquiera sin meterlo al repositorio:
+    sirve para diagnosticar el libro de un cierre antes de subirlo.
+    """
+    ruta = libro or excel.LIBRO
+    if os.path.exists(ruta):
+        tablas, config = excel.leer(ruta)
+        return tablas, config, ruta if libro else "excel"
+    if libro:
+        raise SystemExit(f"No existe el archivo {libro}")
     tablas, config = _cargar_csv()
     return tablas, config, "csv"
 
 
 def describir_fuente(fuente):
-    return ("data/BASE_RRHH.xlsx (libro de Excel)" if fuente == "excel"
-            else "data/csv/*.csv (respaldo)")
+    if fuente == "excel":
+        return "data/BASE_RRHH.xlsx (libro de Excel)"
+    if fuente == "csv":
+        return "data/csv/*.csv (respaldo)"
+    return f"{fuente} (libro de Excel)"

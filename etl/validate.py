@@ -38,40 +38,76 @@ CATALOGOS = {
 }
 
 
+class Hallazgo(str):
+    """
+    Un error de validación.
+
+    Es un str, para que todo lo que ya lo imprime o lo busca siga
+    funcionando igual, y además lleva encima los campos que necesita el
+    reporte agrupado de etl/diagnostico.py: la hoja, la columna, la fila y
+    la clase de problema. Sin esos campos, agrupar 1,500 líneas de texto
+    obliga a adivinar con expresiones regulares.
+    """
+
+    def __new__(cls, texto, tabla, clase, columna=None, fila=None):
+        o = super().__new__(cls, texto)
+        o.tabla = tabla
+        o.clase = clase
+        o.columna = columna
+        o.fila = fila
+        return o
+
+
 def validar(tablas, fuente):
     errores = []
     avisos = []
     etiqueta = "hoja" if fuente == "excel" else "archivo"
 
-    def err(tabla, msg, fila=None):
+    def err(tabla, msg, fila=None, clase="otro", columna=None):
         ref = f" fila {fila}" if fila else ""
-        errores.append(f"[{etiqueta} {tabla}{ref}] {msg}")
+        errores.append(Hallazgo(f"[{etiqueta} {tabla}{ref}] {msg}",
+                                tabla, clase, columna, fila))
 
     # --- 1/2. Tipos y valores obligatorios ---
+    # Una columna declarada opcional en el esquema puede venir vacía: se deja
+    # en None, que significa "no se sabe", y el tablero lo muestra como "—".
+    # No se rellena con cero: un cero afirma un hecho que nadie verificó.
     for tabla, filas in tablas.items():
         definicion = schema.TABLAS[tabla]["columnas"]
         for fila in filas:
             n = fila.get("_n")
             for col, tipo in definicion.items():
                 v = fila.get(col, "")
+                vacia = v is None or str(v).strip() == ""
+                opcional = schema.es_opcional(tabla, col)
+
                 if tipo == "s":
-                    if not str(v).strip():
-                        err(tabla, f"'{col}' está vacía", n)
+                    if vacia and not opcional:
+                        err(tabla, f"'{col}' está vacía", n,
+                            clase="vacia_obligatoria", columna=col)
+                    elif vacia:
+                        fila[col] = None
                 elif tipo == "p":
                     if not RE_PERIODO.match(str(v).strip()):
                         err(tabla, f"periodo inválido '{v}' en '{col}'; "
-                                   f"se escribe AAAA-MM", n)
+                                   f"se escribe AAAA-MM", n,
+                            clase="periodo_invalido", columna=col)
                 else:
-                    if v == "" or v is None:
-                        err(tabla, f"'{col}' numérica está vacía", n)
-                        fila[col] = 0
+                    if vacia:
+                        if opcional:
+                            fila[col] = None
+                        else:
+                            err(tabla, f"'{col}' numérica está vacía", n,
+                                clase="vacia_obligatoria", columna=col)
+                            fila[col] = None
                         continue
                     try:
                         num = float(v)
                     except (TypeError, ValueError):
                         err(tabla, f"'{col}' tiene el texto '{v}' donde se "
-                                   f"espera un número", n)
-                        fila[col] = 0
+                                   f"espera un número", n,
+                            clase="no_numerico", columna=col)
+                        fila[col] = None
                         continue
                     fila[col] = int(num) if tipo == "i" else num
 
@@ -82,9 +118,13 @@ def validar(tablas, fuente):
             if col not in definicion:
                 continue
             for fila in filas:
-                if str(fila.get(col, "")).strip() not in permitidos:
-                    err(tabla, f"'{col}' = '{fila.get(col)}' fuera de catálogo. "
-                               f"Permitidos: {', '.join(permitidos)}", fila.get("_n"))
+                v = fila.get(col)
+                if v is None or str(v).strip() == "":
+                    continue          # la ausencia ya la reportó el paso anterior
+                if str(v).strip() not in permitidos:
+                    err(tabla, f"'{col}' = '{v}' fuera de catálogo. "
+                               f"Permitidos: {', '.join(permitidos)}", fila.get("_n"),
+                        clase="fuera_catalogo", columna=col)
 
     # --- 3. Llaves primarias ---
     for tabla, filas in tablas.items():
@@ -94,7 +134,8 @@ def validar(tablas, fuente):
             clave = tuple(str(fila.get(c, "")) for c in pk)
             if clave in vistas:
                 err(tabla, f"llave duplicada {clave}; ya estaba en la fila "
-                           f"{vistas[clave]}", fila.get("_n"))
+                           f"{vistas[clave]}", fila.get("_n"),
+                    clase="llave_duplicada", columna=" + ".join(pk))
             else:
                 vistas[clave] = fila.get("_n")
 
@@ -111,7 +152,7 @@ def validar(tablas, fuente):
                 if str(fila.get(col, "")) not in validos:
                     err(tabla, f"'{col}' = '{fila.get(col)}' no existe en "
                                f"{dim}; agrégalo primero al catálogo",
-                        fila.get("_n"))
+                        fila.get("_n"), clase="fk_inexistente", columna=col)
 
     # --- 5. Reglas de negocio ---
     for tabla, descripcion, regla in schema.REGLAS:
@@ -124,7 +165,8 @@ def validar(tablas, fuente):
                 ok = False
                 descripcion = f"{descripcion} (no se pudo evaluar: {e})"
             if not ok:
-                err(tabla, f"regla violada: {descripcion}", fila.get("_n"))
+                err(tabla, f"regla violada: {descripcion}", fila.get("_n"),
+                    clase="regla", columna=descripcion)
 
     # --- 6. Continuidad de periodos ---
     for tabla, filas in tablas.items():
