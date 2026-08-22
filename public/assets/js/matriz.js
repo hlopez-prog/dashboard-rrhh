@@ -31,6 +31,22 @@ const COLUMNAS = [
 
 function dato(txt) { return `<span class="dato">${txt}</span>`; }
 
+const hay = (...vs) => vs.every((v) => Number.isFinite(v));
+
+/* "$—" no es un monto: cuando no hay dato, el guion va solo. */
+const mxn2 = (v) => (hay(v) ? `$${fmt.dec(v, 2)}` : '—');
+const unid = (v, d, u) => (hay(v) ? `${fmt.dec(v, d)} ${u}` : '—');
+
+/* Nombre de cada hoja de hechos en el idioma del comité, para poder decir
+   qué falta capturar en lugar de afirmar un estado que nadie midió. */
+const NOMBRE_HOJA = {
+  movimientos: 'movimientos de personal',
+  ausentismo: 'ausentismo',
+  nomina: 'nómina y costo laboral',
+  capacitacion: 'capacitación',
+  relaciones: 'relaciones laborales',
+};
+
 /** Unidad con el peor valor de un KPI. */
 function peorUnidad(porUnidad, almacen, id, direccion = 'menor_mejor') {
   let peor = null;
@@ -96,31 +112,39 @@ export function construirMatriz(almacen, filtro) {
       plantilla: `Rotación voluntaria ≤ ${dato(fmt.pct(mv('rotacion_voluntaria')))} `
         + `(hoy ${dato(fmt.pct(rotVol))}), ausentismo ≤ ${dato(fmt.pct(mv('ausentismo')))} `
         + `(hoy ${dato(fmt.pct(aus))}) y tiempo de cobertura ≤ `
-        + `${dato(fmt.dec(mv('dias_cobertura'), 0) + ' días')} (hoy ${dato(fmt.dec(diasCob, 0) + ' días')}).`,
-      costo: `Costo laboral por tonelada ≤ ${dato('$' + fmt.dec(mv('costo_por_tonelada'), 2))} `
-        + `(hoy ${dato('$' + fmt.dec(cpt, 2))}) y productividad ≥ `
-        + `${dato(fmt.dec(mv('productividad'), 2) + ' t/HH')} (hoy ${dato(fmt.dec(prod, 2) + ' t/HH')}).`,
+        + `${dato(unid(mv('dias_cobertura'), 0, 'días'))} (hoy ${dato(unid(diasCob, 0, 'días'))}).`,
+      costo: `Costo laboral por tonelada ≤ ${dato(mxn2(mv('costo_por_tonelada')))} `
+        + `(hoy ${dato(mxn2(cpt))}) y productividad ≥ `
+        + `${dato(unid(mv('productividad'), 2, 't/HH'))} (hoy ${dato(unid(prod, 2, 't/HH'))}).`,
       desarrollo: `Plan de capacitación ejecutado al ${dato(fmt.pct(mv('cumplimiento_plan_cap')))} `
-        + `(hoy ${dato(fmt.pct(plan))}) y eNPS ≥ ${dato(fmt.dec(mv('enps'), 0) + ' pts')} `
-        + `(hoy ${dato(fmt.dec(enps, 0) + ' pts')}).`,
+        + `(hoy ${dato(fmt.pct(plan))}) y eNPS ≥ ${dato(unid(mv('enps'), 0, 'pts'))} `
+        + `(hoy ${dato(unid(enps, 0, 'pts'))}).`,
     },
     dependencia: {
       plantilla: `Capacidad real de reclutamiento en ${peorRot ? peorRot.nombre : 'las unidades críticas'}: `
-        + `con ${dato(fmt.entero(v('vacantesAbiertas')) + ' vacantes')} abiertas y `
-        + `${dato(fmt.dec(diasCob, 0) + ' días')} de cobertura, ninguna meta de plantilla se sostiene `
+        + `con ${dato(hay(v('vacantesAbiertas')) ? fmt.entero(v('vacantesAbiertas')) + ' vacantes' : '— vacantes')} abiertas y `
+        + `${dato(unid(diasCob, 0, 'días'))} de cobertura, ninguna meta de plantilla se sostiene `
         + `sin fortalecer atracción local y hospedaje de turno.`,
       costo: `Programa de producción y disponibilidad de equipo. La horas extra de `
         + `${dato(fmt.pct(he))} son consecuencia de ausentismo (${dato(fmt.pct(aus))}) `
         + `y de plazas no cubiertas: sin cerrar plantilla, el sobrecosto no baja por decreto.`,
       desarrollo: `Liberación de personal operativo por parte de Operaciones y Mantenimiento. `
-        + (Number.isFinite(plan) && plan < 100
-          ? `Sin ventanas de turno protegidas, el ${dato(fmt.pct(100 - plan))} `
-            + `faltante del plan no se recupera.`
-          : `El plan va ejecutado al ${dato(fmt.pct(plan))}; sostenerlo depende de que `
-            + `las ventanas de turno se mantengan protegidas en el siguiente trimestre.`),
+        + (!hay(plan)
+          ? `El avance del plan no está capturado: sin ese dato no se sabe si `
+            + `hay brecha que recuperar ni cuánta.`
+          : plan < 100
+            ? `Sin ventanas de turno protegidas, el ${dato(fmt.pct(100 - plan))} `
+              + `faltante del plan no se recupera.`
+            : `El plan va ejecutado al ${dato(fmt.pct(plan))}; sostenerlo depende de que `
+              + `las ventanas de turno se mantengan protegidas en el siguiente trimestre.`),
     },
     riesgo: {
-      plantilla: brechaRot !== null && brechaRot > 0
+      plantilla: !hay(rot)
+        ? `La rotación todavía no se puede medir: falta capturar `
+          + `${dato(NOMBRE_HOJA.movimientos)}. El riesgo no es que esté `
+          + `controlada, es que no se está midiendo: sin bajas capturadas no `
+          + `hay cómo detectar una fuga de personal en curso.`
+        : brechaRot !== null && brechaRot > 0
         ? `Rotación ${dato(fmt.dec(brechaRot, 1) + ' pp')} arriba de meta, concentrada en `
           + `${peorRot ? dato(peorRot.nombre) : 'unidades operativas'} `
           + `(${peorRot ? fmt.pct(peorRot.valor) : '—'}). Rotación temprana de `
@@ -138,11 +162,11 @@ export function construirMatriz(almacen, filtro) {
       plantilla: `${dato(fmt.pct(v('pctSindicalizacion')))} de la plantilla propia sindicalizada. `
         + `Cualquier ajuste de dotación o de esquema de turno pasa por mesa sindical antes de `
         + `comunicarse a la operación.`,
-      costo: `Revisión salarial más próxima en ${dato(fmt.entero(cct) + ' días')}. `
+      costo: `Revisión salarial más próxima en ${dato(hay(cct) ? fmt.entero(cct) + ' días' : '—')}. `
         + `El costo de horas extra es hoy el argumento más fuerte de la contraparte para pedir `
         + `plazas de base: conviene llegar a la mesa con plantilla cerrada.`,
-      desarrollo: `Nivel de riesgo sindical ${dato(riesgo + '/5')}, `
-        + `${dato(fmt.entero(confl) + ' conflictos')} abiertos y eNPS más bajo en `
+      desarrollo: `Nivel de riesgo sindical ${dato(hay(riesgo) ? riesgo + '/5' : '—')}, `
+        + `${dato(hay(confl) ? fmt.entero(confl) + ' conflictos' : '— conflictos')} abiertos y eNPS más bajo en `
         + `${peorEnps ? dato(peorEnps.nombre) : '—'} (${peorEnps ? fmt.dec(peorEnps.valor, 0) : '—'} pts). `
         + `Capacitación y liderazgo de primera línea son la palanca de clima disponible sin costo de nómina.`,
     },
@@ -169,6 +193,22 @@ export function construirMatriz(almacen, filtro) {
 
   /* Próxima decisión requerida: cierre ejecutivo del formato de la skill. */
   const decisiones = [];
+
+  /*
+   * Un módulo sin capturar es la primera decisión, antes que cualquier
+   * desviación. Si no se dice aquí, la matriz cierra con "no hay desviación
+   * que requiera decisión inmediata" — que con media base vacía es la
+   * conclusión más peligrosa que puede leer un comité: no hay desviación
+   * porque no hay medición.
+   */
+  const capturado = s.at(-1)?.crudo?._filas || {};
+  const sinCaptura = Object.keys(NOMBRE_HOJA).filter((h) => !capturado[h]);
+  if (sinCaptura.length) {
+    decisiones.push(`asignar responsable y fecha para la captura de `
+      + `${sinCaptura.map((h) => NOMBRE_HOJA[h]).join(', ')}: `
+      + `${sinCaptura.length === 1 ? 'ese módulo' : 'esos módulos'} no se está`
+      + `${sinCaptura.length === 1 ? '' : 'n'} reportando al comité`);
+  }
   if (estadoVsMeta(rot, mv('rotacion_anualizada'), 'menor_mejor') === 'alerta') {
     decisiones.push(`autorizar el paquete de retención y cierre de plantilla en `
       + `${peorRot ? peorRot.nombre : 'las unidades fuera de meta'}`);
@@ -182,7 +222,10 @@ export function construirMatriz(almacen, filtro) {
   if (Number.isFinite(cct) && cct < 120) {
     decisiones.push(`fijar el mandato de negociación antes de la revisión salarial (${fmt.entero(cct)} días)`);
   }
-  if (!decisiones.length) decisiones.push('ratificar metas del siguiente semestre; no hay desviación que requiera decisión inmediata');
+  if (!decisiones.length) {
+    decisiones.push('ratificar metas del siguiente semestre; no hay desviación '
+      + 'que requiera decisión inmediata');
+  }
 
   return { tabla, decisiones };
 }

@@ -76,6 +76,12 @@ export function formatear(v, formato = 'dec') {
   return (FORMATOS[formato] || FORMATOS.dec)(v);
 }
 
+/* Convierte a número para graficar. Un hueco (null / vacío) NO es cero:
+   se vuelve NaN para que el tooltip diga "—" y no dibuje una barra. */
+export function num(v) {
+  return (v === null || v === undefined || v === '') ? NaN : Number(v);
+}
+
 /* Ticks "redondos" en el eje Y. */
 function ticks(min, max, objetivo = 5) {
   if (min === max) { min -= 1; max += 1; }
@@ -285,10 +291,10 @@ export function barras(contenedor, cfg) {
   if (!n || !series.length) return el('p', { clase: 'nota', texto: 'Sin datos en el rango seleccionado.' });
 
   const totales = etiquetas.map((_, i) => apilado
-    ? series.reduce((t, se) => t + (Number(se.valores[i]) || 0), 0)
-    : Math.max(...series.map((se) => Number(se.valores[i]) || 0)));
+    ? series.reduce((t, se) => t + (num(se.valores[i]) || 0), 0)
+    : Math.max(...series.map((se) => num(se.valores[i]) || 0)));
   const minVals = etiquetas.map((_, i) => apilado
-    ? 0 : Math.min(...series.map((se) => Number(se.valores[i]) || 0)));
+    ? 0 : Math.min(...series.map((se) => num(se.valores[i]) || 0)));
   let max = Math.max(...totales, meta && Number.isFinite(meta.valor) ? meta.valor : -Infinity);
   let min = Math.min(0, ...minVals);
   const tk = ticks(min, max * 1.06);
@@ -318,13 +324,13 @@ export function barras(contenedor, cfg) {
   etiquetas.forEach((et, i) => {
     let acumulado = 0;
     const filasTt = series.map((se, si) => {
-      const v = Number(se.valores[i]);
+      const v = num(se.valores[i]);
       return `<div class="tt-fila"><i class="tt-marca" style="background:${se.color || color(si)}"></i>`
         + `<span>${esc(se.nombre)}</span><span class="tt-val">${formatear(v, formato)}</span></div>`;
     }).join('');
 
     series.forEach((se, si) => {
-      const v = Number(se.valores[i]) || 0;
+      const v = num(se.valores[i]) || 0;
       const c = se.color || color(si);
       let x, y, h;
       if (apilado) {
@@ -372,7 +378,7 @@ export function barras(contenedor, cfg) {
   svg.append(realce);
   etiquetas.forEach((et, i) => {
     const filasTt = series.map((se, si) => {
-      const v = Number(se.valores[i]);
+      const v = num(se.valores[i]);
       return `<div class="tt-fila"><i class="tt-marca" style="background:${se.color || color(si)}"></i>`
         + `<span>${esc(se.nombre)}</span><span class="tt-val">${formatear(v, formato)}</span></div>`;
     }).join('');
@@ -412,8 +418,8 @@ export function barrasH(contenedor, cfg) {
   const x0 = m.l, x1 = W - m.r;
 
   const totales = items.map((it) => apilado
-    ? it.valores.reduce((t, v) => t + (Number(v.valor) || 0), 0)
-    : Math.max(...it.valores.map((v) => Number(v.valor) || 0)));
+    ? it.valores.reduce((t, v) => t + (num(v.valor) || 0), 0)
+    : Math.max(...it.valores.map((v) => num(v.valor) || 0)));
   const max = Math.max(...totales, meta && Number.isFinite(meta.valor) ? meta.valor : -Infinity, 1);
   const tk = ticks(0, max * 1.02, 4);
   const tMax = Math.max(...tk);
@@ -449,7 +455,7 @@ export function barrasH(contenedor, cfg) {
 
     let acc = 0;
     it.valores.forEach((v, vi) => {
-      const val = Number(v.valor) || 0;
+      const val = num(v.valor) || 0;
       const xIni = apilado ? eX(acc) : x0;
       const ancho = Math.max(1, eX(val) - x0 - (apilado ? 0 : 0));
       const alto = apilado ? 15 : Math.max(4, 15 / it.valores.length - 2);
@@ -469,9 +475,9 @@ export function barrasH(contenedor, cfg) {
     });
 
     svg.append(s('text', {
-      x: eX(apilado ? acc : Math.max(...it.valores.map((v) => Number(v.valor) || 0))) + 7,
+      x: eX(apilado ? acc : Math.max(...it.valores.map((v) => num(v.valor) || 0))) + 7,
       y: yc + 4, fill: '#0b0b0b', 'font-size': 11, 'font-weight': 700,
-    }, formatear(apilado ? acc : Math.max(...it.valores.map((v) => Number(v.valor) || 0)), formato)));
+    }, formatear(apilado ? acc : Math.max(...it.valores.map((v) => num(v.valor) || 0)), formato)));
   });
 
   if (meta && Number.isFinite(meta.valor)) {
