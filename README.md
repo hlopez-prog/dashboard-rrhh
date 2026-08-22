@@ -60,10 +60,15 @@ dashboard-rrhh/
 │   │                            fact_capacitacion · fact_relaciones_laborales · metas
 │   └── csv/                     export automático, para diff legible en git
 ├── etl/
+│   ├── instructivo.py           genera el instructivo de captura por unidad
+│   ├── reestructurar.py         regenera hechos al cambiar el catálogo
+│   ├── captura.py               OPCIONAL — captura repartida por unidad,
+│   │                            solo si algún día conviene partirla
 │   ├── schema.py                ÚNICA definición del modelo de datos
 │   ├── excel.py                 crea y lee el libro de Excel
 │   ├── cargar.py                precedencia de fuente: Excel, luego CSV
 │   ├── validate.py              validación que corre en CI
+│   ├── diagnostico.py           agrupa los errores en pendientes accionables
 │   ├── build.py                 construye public/data/dashboard.json
 │   ├── standalone.py            arma el HTML de un solo archivo
 │   ├── seed_demo.py             genera la base demo determinista
@@ -81,8 +86,11 @@ dashboard-rrhh/
 ├── plantillas/                  CSV vacíos + DICCIONARIO.md
 ├── INSTALACION_GITHUB.md        guía de instalación paso a paso
 ├── GUIA_VISUAL_GITHUB.html      la misma guía con maquetas de cada pantalla
+├── GUIA_ACTUALIZAR_BASE.html    guía del cierre mensual: bajar, capturar, subir
+├── INSTRUCTIVO_CAPTURA.html     qué entrega cada unidad — generado, no editar
 ├── tests/
-│   ├── test_datos.py            lectura del libro y captura de errores reales
+│   ├── test_datos.py            lectura del libro, validador y diagnóstico
+│   ├── test_captura.py          hojas de captura por unidad (opcional)
 │   ├── kpi.test.mjs             fórmulas verificadas con casos a mano
 │   └── e2e.mjs                  render, filtros, colores, tooltips
 └── .github/workflows/deploy.yml
@@ -174,8 +182,16 @@ Para cargar los datos reales:
 Verificar antes de subir, si tienes Python a mano:
 
 ```bash
-python3 etl/build.py    # falla con la hoja y la fila si algo está mal
+python3 etl/build.py                       # falla con la hoja y la fila
+python3 etl/diagnostico.py                 # los errores agrupados por problema
+python3 etl/diagnostico.py otro_libro.xlsx # revisa un libro sin meterlo al repo
 ```
+
+`validate.py` es el semáforo: dice sí o no. `diagnostico.py` es la lista de
+pendientes: agrupa los errores por hoja y columna, comprime las filas en rangos,
+dice qué escribir en cada caso y deja `DIAGNOSTICO.html` para imprimir o mandar
+a quien captura. Cuando la validación falla en CI, ese mismo reporte queda en el
+resumen de la ejecución de GitHub Actions.
 
 ---
 
@@ -193,6 +209,43 @@ Definiciones completas en `public/assets/js/kpi.js`. Reglas transversales:
 - **Ausentismo** = horas de ausencia / horas programadas.
 - El semáforo aplica **3 % de tolerancia** sobre la meta antes de marcar
   desviación, para no encender alertas por ruido de redondeo.
+
+### Vacío no es cero
+
+Es la regla que gobierna todo el motor de cálculo, y la única que puede hacer
+que el tablero mienta si se rompe.
+
+Una celda vacía llega al tablero como `null` y significa *no se sabe*. Un cero
+significa *se midió, y es cero*. Convertir lo primero en lo segundo produce
+afirmaciones que nadie verificó: «no hubo mujeres en esa área», «el costo
+laboral del mes fue de $0», «no se fue nadie en doce meses».
+
+Tres consecuencias concretas en `kpi.js`:
+
+1. **Cada razón acumula su propio denominador.** Si de dos áreas con 100
+   personas cada una solo una reporta 10 mujeres, el resultado es 10 % (10 de
+   100), no 5 % (10 de 200). De ahí los acumuladores en pareja
+   (`dotacion`/`hcPropioDot`, `mujeres`/`hcPropioMuj`, …): sumar el denominador
+   completo contra un numerador parcial diluye el porcentaje sin que nada avise.
+
+2. **Se distinguen dos silencios.** Si la hoja del mes no se capturó, no se sabe
+   nada y el valor es `null`. Si la hoja se capturó y no existe fila de esa
+   categoría, la categoría no ocurrió y el cero es el dato: un área sin fila de
+   contratistas no tiene contratistas. El mapa `ORIGEN` en `kpi.js` es lo que
+   permite separar los dos casos.
+
+3. **Una hoja de hechos puede estar vacía.** `build.py` publica igual y el
+   módulo aparece con «—». Solo son imprescindibles las dimensiones y
+   `fact_plantilla`. Abortar el build obligaría a inventar un mes de nómina para
+   poder desplegar.
+
+La matriz ejecutiva sigue la misma regla: no afirma un estado que no puede
+medir, y cuando falta un módulo la **primera decisión requerida** es asignar
+responsable y fecha de captura — no «no hay desviación», que con media base
+vacía es la conclusión más peligrosa que puede leer un comité.
+
+Qué columnas son obligatorias y cuáles opcionales se declara en un solo lugar:
+`OPCIONALES` en `etl/schema.py`.
 
 ### Plantilla, rotación y ausentismo
 

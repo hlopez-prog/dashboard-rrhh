@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="es-MX">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Siete cargas a GitHub</title>
+<style>
+:root{
+  --negro:#000;--verde:#d9ead3;--naranja:#fce5cd;--gris:#f2f2f2;
+  --verde-borde:#a8c69a;--verde-texto:#274e13;
+  --naranja-borde:#e8c39e;--naranja-texto:#7a3e00;
+  --gris-borde:#d5d5d5;
+  --sup:#fff;--plano:#fafafa;--ink1:#0b0b0b;--ink2:#4a4a48;--ink3:#79776f;
+  --linea:#e2e2de;--azul:#2a78d6;--rojo:#b3261e;
+  --f:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:var(--f);font-size:15px;line-height:1.6;
+  color:var(--ink1);background:var(--plano)}
+
+.banner{background:var(--gris);border-bottom:2px solid var(--negro);padding:22px 24px 18px}
+.wrap{max-width:1020px;margin:0 auto}
+.banner h1{margin:0;font-size:24px;letter-spacing:-.01em;text-wrap:balance}
+.banner p{margin:6px 0 0;font-size:13.5px;color:var(--ink2);max-width:68ch}
+.banner .org{margin:0 0 2px;text-transform:uppercase;letter-spacing:.08em;
+  font-size:12px;color:var(--ink3)}
+
+main{max-width:1020px;margin:0 auto;padding:24px 24px 80px}
+
+.aviso{background:var(--naranja);border:1px solid var(--naranja-borde);border-radius:4px;
+  padding:14px 16px;color:var(--naranja-texto);font-size:14px;margin:0 0 22px}
+.aviso h3{margin:0 0 6px;font-size:14px;color:#5c2f00}
+.aviso p{margin:6px 0 0}
+.aviso strong{color:#5c2f00}
+
+.resumen{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));
+  gap:12px;margin:0 0 26px}
+.tarjeta{background:var(--sup);border:1px solid var(--linea);border-radius:4px;padding:13px 15px}
+.tarjeta .et{font-size:11px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.07em;color:var(--ink3)}
+.tarjeta .val{font-size:22px;font-weight:700;margin-top:3px;
+  font-variant-numeric:tabular-nums}
+.tarjeta .pie{font-size:12.5px;color:var(--ink2);margin-top:3px}
+
+h2.seccion{font-size:13px;text-transform:uppercase;letter-spacing:.08em;
+  color:var(--ink3);margin:34px 0 12px;padding-bottom:7px;
+  border-bottom:2px solid var(--negro)}
+
+.paso{background:var(--sup);border:1px solid var(--linea);border-radius:4px;
+  margin-bottom:20px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.05)}
+.paso>h3{margin:0;background:var(--negro);color:#fff;font-size:16px;padding:11px 16px;
+  display:flex;align-items:center;gap:11px}
+.paso>h3 .n{background:#fff;color:var(--negro);width:25px;height:25px;border-radius:50%;
+  display:inline-flex;align-items:center;justify-content:center;
+  font-size:13.5px;font-weight:700;flex:0 0 auto;font-variant-numeric:tabular-nums}
+.paso>h3 .t{font-size:12px;font-weight:400;color:#b9b9b4;margin-left:auto;white-space:nowrap}
+.cuerpo{padding:16px}
+.cuerpo>*:first-child{margin-top:0}
+.cuerpo>*:last-child{margin-bottom:0}
+
+.ir{background:var(--gris);border:1px solid var(--gris-borde);border-radius:4px;
+  padding:11px 13px;margin:0 0 14px}
+.ir .et{font-size:11px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.07em;color:var(--ink3)}
+.ir a{display:inline-block;margin-top:4px;font-family:var(--mono);font-size:13px;
+  color:var(--azul);word-break:break-all;font-weight:600}
+
+.campo{margin:12px 0}
+.campo .et{font-size:11px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.07em;color:var(--ink3);display:block;margin-bottom:4px}
+.msj{font-family:var(--mono);font-size:13px;background:var(--gris);
+  border:1px solid var(--gris-borde);border-radius:3px;padding:6px 9px;
+  display:block;user-select:all}
+
+table{width:100%;border-collapse:collapse;font-size:13.5px;margin:12px 0}
+th{background:var(--negro);color:#fff;text-align:left;padding:7px 10px;font-weight:600}
+td{padding:6px 10px;border-bottom:1px solid var(--linea);vertical-align:top;
+  background:var(--sup)}
+td.mono{font-family:var(--mono);font-size:13px;white-space:nowrap}
+.envoltura{overflow-x:auto;-webkit-overflow-scrolling:touch}
+
+code{font-family:var(--mono);font-size:13px;background:var(--gris);
+  border-radius:3px;padding:1px 5px}
+.btn-lit{display:inline-block;background:#1f883d;color:#fff;border-radius:5px;
+  padding:1px 8px;font-size:13px;font-weight:600;white-space:nowrap}
+.btn-gris{display:inline-block;background:#f6f8fa;border:1px solid #d1d9e0;
+  border-radius:5px;padding:1px 8px;font-size:13px;font-weight:600;
+  white-space:nowrap;color:#24292f}
+
+ol.pasos{margin:0;padding-left:21px}
+ol.pasos>li{margin-bottom:9px}
+ul.simple{margin:8px 0;padding-left:19px}
+ul.simple li{margin-bottom:5px}
+
+figure{margin:16px 0;padding:0}
+figure svg{display:block;width:100%;height:auto;border:1px solid var(--gris-borde);
+  border-radius:5px;background:#fff}
+figcaption{font-size:12.5px;color:var(--ink3);margin-top:6px;font-style:italic;
+  max-width:70ch}
+
+.revisa{background:var(--verde);border:1px solid var(--verde-borde);border-radius:4px;
+  padding:11px 13px;margin-top:14px}
+.revisa h4{margin:0 0 5px;font-size:12px;color:var(--verde-texto);
+  text-transform:uppercase;letter-spacing:.05em}
+.revisa p,.revisa li{font-size:13.5px;color:#1e3b0e;margin:5px 0}
+
+.ojo{background:var(--naranja);border:1px solid var(--naranja-borde);border-radius:4px;
+  padding:11px 13px;margin-top:14px}
+.ojo h4{margin:0 0 5px;font-size:12px;color:var(--naranja-texto);
+  text-transform:uppercase;letter-spacing:.05em}
+.ojo p,.ojo li{font-size:13.5px;color:#5c2f00;margin:5px 0}
+
+.opcional>h3{background:#4a4a48}
+.opcional>h3 .n{background:#d8d8d4;color:#4a4a48}
+
+.check{list-style:none;padding:0;margin:8px 0}
+.check li{padding:7px 0 7px 28px;position:relative;
+  border-bottom:1px solid var(--linea);font-size:14px}
+.check li:before{content:"";position:absolute;left:2px;top:10px;width:15px;height:15px;
+  border:1.5px solid var(--ink3);border-radius:3px}
+
+.pie-doc{border-top:1px solid var(--linea);margin-top:32px;padding-top:16px;
+  font-size:12.5px;color:var(--ink3)}
+
+@media print{
+  body{background:#fff}
+  .paso,figure,.tarjeta{break-inside:avoid}
+  .ir a{color:#000}
+}
+@media(max-width:640px){
+  main,.banner{padding-left:14px;padding-right:14px}
+  .banner h1{font-size:20px}
+  .paso>h3{font-size:15px}
+  .paso>h3 .t{display:none}
+}
+</style>
+</head>
+<body>
+
+<header class="banner">
+  <div class="wrap">
+    <p class="org">Minera Rio Tinto · Dashboard de RRHH</p>
+    <h1>Siete cargas a GitHub</h1>
+    <p>Cómo aplicar los cambios de la carpeta <code>actualizacion-real</code>. Todo se hace
+    arrastrando archivos en el navegador: no hay que instalar nada ni escribir comandos.
+    Unos 15 minutos.</p>
+  </div>
+</header>
+
+<main>
+
+<div class="aviso">
+  <h3>Lo primero, para que no te asustes a la mitad</h3>
+  <p>Las <strong>primeras cinco cargas van a marcar ✗ rojo</strong> en GitHub. Es correcto y
+  esperado: el código nuevo ya está arriba, pero la base de datos todavía es la vieja, y la
+  validación no deja publicar datos que no cuadran. <strong>La carga 6 es la que pone todo en
+  verde</strong>, porque es la que trae la base corregida.</p>
+  <p>Mientras eso pasa, el tablero publicado <strong>no se rompe</strong>: sigue mostrando el
+  cierre anterior. Eso es a propósito.</p>
+</div>
+
+<div class="resumen">
+  <div class="tarjeta">
+    <span class="et">Cargas</span>
+    <div class="val">7</div>
+    <p class="pie">6 necesarias + 1 opcional</p>
+  </div>
+  <div class="tarjeta">
+    <span class="et">Archivos</span>
+    <div class="val">26</div>
+    <p class="pie">16 de código, 3 de guías, 1 base, 9 de export</p>
+  </div>
+  <div class="tarjeta">
+    <span class="et">Orden</span>
+    <div class="val">Fijo</div>
+    <p class="pie">El código antes que los datos, sin excepción</p>
+  </div>
+  <div class="tarjeta">
+    <span class="et">Se publica en</span>
+    <div class="val">3-4 min</div>
+    <p class="pie">Después de la carga 6</p>
+  </div>
+</div>
+
+<h2 class="seccion">Por qué el orden no se puede cambiar</h2>
+
+<div class="paso">
+  <div class="cuerpo">
+    <p>El código nuevo entiende una base con columnas vacías y hojas sin capturar. El código
+    viejo no: exige que todo traiga número. Y la base nueva tiene columnas vacías a propósito,
+    porque hay módulos que todavía no se capturan.</p>
+    <div class="envoltura">
+      <table>
+        <thead>
+          <tr><th>Si subes…</th><th>Con…</th><th>Resultado</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>la base primero</td><td>el código viejo</td>
+              <td>La validación la rechaza. No publica.</td></tr>
+          <tr><td>el código primero</td><td>la base vieja</td>
+              <td>✗ rojo, y está bien. El tablero conserva el cierre anterior.</td></tr>
+          <tr><td>la base al final</td><td>el código nuevo</td>
+              <td>✓ verde. Publica.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>Por eso las carpetas se llaman <code>para-1-etl</code>, <code>para-2-…</code> y así:
+    el número es el orden de carga, y el nombre es la carpeta de destino en GitHub.</p>
+  </div>
+</div>
+
+<h2 class="seccion">Las dos reglas que evitan el desastre</h2>
+
+<div class="paso">
+  <div class="cuerpo">
+    <ol class="pasos">
+      <li><strong>Arrastra los ARCHIVOS, no la carpeta.</strong> Abre
+      <code>para-1-etl</code>, selecciona los archivos de adentro (Ctrl+A) y arrastra esos.
+      Si arrastras la carpeta cerrada, GitHub crea una subcarpeta con ese nombre y los
+      archivos quedan en el lugar equivocado.</li>
+      <li><strong>Antes de confirmar, lee la ruta que aparece arriba de la zona de
+      arrastre.</strong> Debe decir exactamente la carpeta de destino de esa carga. Es la
+      única verificación que impide que un archivo aterrice donde no va.</li>
+    </ol>
+    <div class="ojo">
+      <h4>Y una que ya nos costó una vez</h4>
+      <p>No uses <span class="btn-gris">choose your files</span> para navegar entrando a
+      carpetas. Al hacerlo, GitHub sube el contenido <em>aplanado</em>: todos los archivos
+      juntos en un solo nivel, y el repositorio deja de funcionar. Arrastrar es lo seguro.</p>
+    </div>
+  </div>
+</div>
+
+<h2 class="seccion">La pantalla que vas a ver siete veces</h2>
+
+<div class="paso">
+  <div class="cuerpo">
+    <figure>
+      <svg viewBox="0 0 900 400" role="img" aria-label="Pantalla de subida de archivos de GitHub con la ruta, la zona de arrastre y la caja del mensaje señaladas">
+        <rect width="900" height="400" fill="#fff"/>
+        <rect x="0" y="0" width="900" height="34" fill="#f6f8fa"/>
+        <line x1="0" y1="34" x2="900" y2="34" stroke="#d1d9e0"/>
+        <circle cx="20" cy="17" r="7" fill="#24292f"/>
+        <text x="36" y="21" font-family="system-ui" font-size="12" fill="#24292f" font-weight="600">hlopez-prog / dashboard-rrhh</text>
+
+        <!-- ruta / breadcrumb -->
+        <text x="20" y="66" font-family="system-ui" font-size="17" fill="#1f2328">
+          <tspan font-weight="600" fill="#0969da">dashboard-rrhh</tspan><tspan fill="#59636e"> / </tspan><tspan font-weight="600">etl</tspan><tspan fill="#59636e"> /</tspan>
+        </text>
+        <rect x="14" y="48" width="226" height="26" rx="4" fill="none" stroke="#b45f06" stroke-width="2"/>
+        <circle cx="262" cy="61" r="12" fill="#b45f06"/>
+        <text x="262" y="66" font-family="system-ui" font-size="12.5" font-weight="700" fill="#fff" text-anchor="middle">1</text>
+        <text x="282" y="66" font-family="system-ui" font-size="12.5" font-weight="700" fill="#b45f06">Verifica que diga la carpeta correcta</text>
+
+        <!-- zona de arrastre -->
+        <rect x="20" y="90" width="860" height="118" rx="6" fill="#f6f8fa" stroke="#d1d9e0" stroke-dasharray="6 4"/>
+        <text x="450" y="138" font-family="system-ui" font-size="14" fill="#1f2328" text-anchor="middle" font-weight="600">Drag files here to add them to your repository</text>
+        <text x="450" y="160" font-family="system-ui" font-size="12" fill="#59636e" text-anchor="middle">Or choose your files</text>
+        <line x1="418" y1="164" x2="482" y2="164" stroke="#b3261e" stroke-width="1.5"/>
+        <line x1="424" y1="156" x2="476" y2="170" stroke="#b3261e" stroke-width="1.5"/>
+        <text x="450" y="184" font-family="system-ui" font-size="11.5" fill="#b3261e" text-anchor="middle" font-weight="600">no uses este enlace</text>
+        <circle cx="52" cy="112" r="12" fill="#b45f06"/>
+        <text x="52" y="117" font-family="system-ui" font-size="12.5" font-weight="700" fill="#fff" text-anchor="middle">2</text>
+        <text x="72" y="117" font-family="system-ui" font-size="12.5" font-weight="700" fill="#b45f06">Suelta aquí los archivos</text>
+
+        <!-- archivos ya cargados -->
+        <g font-family="ui-monospace" font-size="11.5" fill="#1f2328">
+          <text x="30" y="234">schema.py</text><text x="30" y="252">validate.py</text>
+          <text x="30" y="270">build.py</text><text x="30" y="288">cargar.py</text>
+          <text x="30" y="306">diagnostico.py</text>
+        </g>
+        <g font-family="system-ui" font-size="11" fill="#1a7f37">
+          <text x="150" y="234">✓</text><text x="150" y="252">✓</text><text x="150" y="270">✓</text>
+          <text x="150" y="288">✓</text><text x="150" y="306">✓</text>
+        </g>
+        <text x="172" y="272" font-family="system-ui" font-size="11.5" fill="#59636e">cuenta los archivos: deben estar los 5</text>
+
+        <!-- commit -->
+        <line x1="20" y1="322" x2="880" y2="322" stroke="#d1d9e0"/>
+        <text x="20" y="344" font-family="system-ui" font-size="13" font-weight="600" fill="#1f2328">Commit changes</text>
+        <rect x="20" y="352" width="420" height="24" rx="5" fill="#fff" stroke="#d1d9e0"/>
+        <text x="30" y="368" font-family="system-ui" font-size="11.5" fill="#59636e">Columnas opcionales, nulos y diagnostico agrupado</text>
+        <rect x="456" y="352" width="112" height="24" rx="5" fill="#1f883d"/>
+        <text x="512" y="368" font-family="system-ui" font-size="11.5" fill="#fff" text-anchor="middle" font-weight="600">Commit changes</text>
+        <circle cx="592" cy="364" r="12" fill="#b45f06"/>
+        <text x="592" y="369" font-family="system-ui" font-size="12.5" font-weight="700" fill="#fff" text-anchor="middle">3</text>
+        <text x="612" y="369" font-family="system-ui" font-size="12" font-weight="700" fill="#b45f06">Pega el mensaje y confirma</text>
+      </svg>
+      <figcaption>Es la misma pantalla en las siete cargas: cambia nada más la carpeta de la
+      ruta y los archivos que sueltas. El botón verde se habilita en cuanto hay archivos
+      cargados.</figcaption>
+    </figure>
+    <p>Cada carga de aquí en adelante te da tres cosas: el <strong>enlace directo</strong>
+    (no tienes que buscar nada en el menú), los <strong>archivos</strong> que van, y el
+    <strong>mensaje del commit</strong> para copiar y pegar.</p>
+  </div>
+</div>
+
+<h2 class="seccion">Las seis cargas necesarias</h2>
+
+<section class="paso">
+  <h3><span class="n">1</span> Carpeta <code>etl</code> · el motor <span class="t">5 archivos</span></h3>
+  <div class="cuerpo">
+    <div class="ir">
+      <span class="et">Abre este enlace</span><br>
+      <a href="https://github.com/hlopez-prog/dashboard-rrhh/upload/main/etl">https://github.com/hlopez-prog/dashboard-rrhh/upload/main/etl</a>
+    </div>
+    <p>Arrastra los 5 archivos de <code>para-1-etl</code>:</p>
+    <div class="envoltura">
+      <table>
+        <thead><tr><th>Archivo</th><th>Qué cambia</th></tr></thead>
+        <tbody>
+          <tr><td class="mono">schema.py</td><td>Declara qué columnas pueden venir vacías. Agrega los turnos reales 14x7, 5x2 y 20x10</td></tr>
+          <tr><td class="mono">validate.py</td><td>Ya no marca error por una columna opcional vacía. Clasifica cada error para el diagnóstico</td></tr>
+          <tr><td class="mono">build.py</td><td>Escribe <em>nulo</em> y no cero cuando no hay dato. Publica aunque una hoja de hechos esté vacía</td></tr>
+          <tr><td class="mono">cargar.py</td><td>Permite revisar un libro sin meterlo al repositorio</td></tr>
+          <tr><td class="mono">diagnostico.py</td><td><strong>Nuevo.</strong> Agrupa los errores en pendientes con las filas exactas</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="campo">
+      <span class="et">Mensaje del commit</span>
+      <span class="msj">Columnas opcionales, nulos y diagnostico agrupado</span>
+    </div>
+    <div class="revisa">
+      <h4>Verifica antes de seguir</h4>
+      <p>Entra a <code>etl</code> en el repositorio. Los 5 archivos deben aparecer con el
+      mensaje de este commit al lado y la fecha de hoy. Si alguno quedó con un commit viejo,
+      no subió: repite la carga solo con ese.</p>
+    </div>
+  </div>
+</section>
+
+<section class="paso">
+  <h3><span class="n">2</span> Carpeta <code>public/assets/js</code> · los indicadores <span class="t">3 archivos</span></h3>
+  <div class="cuerpo">
+    <div class="ir">
+      <span class="et">Abre este enlace</span><br>
+      <a href="https://github.com/hlopez-prog/dashboard-rrhh/upload/main/public/assets/js">https://github.com/hlopez-prog/dashboard-rrhh/upload/main/public/assets/js</a>
+    </div>
+    <p>Arrastra los 3 archivos de <code>para-2-public-assets-js</code>:</p>
+    <div class="envoltura">
+      <table>
+        <thead><tr><th>Archivo</th><th>Qué cambia</th></tr></thead>
+        <tbody>
+          <tr><td class="mono">kpi.js</td><td>Cada porcentaje se calcula solo con las filas que sí tienen dato. Muestra “—” cuando no sabe</td></tr>
+          <tr><td class="mono">graficos.js</td><td>Un hueco ya no se dibuja como una barra en cero</td></tr>
+          <tr><td class="mono">matriz.js</td><td>La matriz ejecutiva dejó de afirmar lo que no puede medir</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="campo">
+      <span class="et">Mensaje del commit</span>
+      <span class="msj">Los indicadores distinguen un cero de un dato faltante</span>
+    </div>
+  </div>
+</section>
+
+<section class="paso">
+  <h3><span class="n">3</span> Carpeta <code>tests</code> · las pruebas <span class="t">4 archivos</span></h3>
+  <div class="cuerpo">
+    <div class="ir">
+      <span class="et">Abre este enlace</span><br>
+      <a href="https://github.com/hlopez-prog/dashboard-rrhh/upload/main/tests">https://github.com/hlopez-prog/dashboard-rrhh/upload/main/tests</a>
+    </div>
+    <p>Arrastra los 4 archivos de <code>para-3-tests</code>: <code>test_datos.py</code>,
+    <code>test_captura.py</code>, <code>kpi.test.mjs</code> y <code>e2e.mjs</code>.</p>
+    <p>Estas son las pruebas que atraparon dos mentiras del tablero antes de que llegaran a
+    tu comité: un “costo laboral del mes: $0” y una “rotación anualizada: 0.0%” cuando no
+    había una sola cifra capturada.</p>
+    <div class="campo">
+      <span class="et">Mensaje del commit</span>
+      <span class="msj">Pruebas de datos incompletos</span>
+    </div>
+    <div class="ojo">
+      <h4>Esta carga debe ir después de la 1</h4>
+      <p><code>test_datos.py</code> prueba <code>diagnostico.py</code>. Si llega antes, la
+      validación falla porque no encuentra el archivo que está probando.</p>
+    </div>
+  </div>
+</section>
+
+<section class="paso">
+  <h3><span class="n">4</span> Carpeta <code>.github/workflows</code> · la automatización <span class="t">1 archivo</span></h3>
+  <div class="cuerpo">
+    <div class="ir">
+      <span class="et">Abre este enlace</span><br>
+      <a href="https://github.com/hlopez-prog/dashboard-rrhh/upload/main/.github/workflows">https://github.com/hlopez-prog/dashboard-rrhh/upload/main/.github/workflows</a>
+    </div>
+    <p>Arrastra <code>deploy.yml</code> de <code>para-4-github-workflows</code>.</p>
+    <p>Con esto, cuando la validación falle, GitHub va a mostrar el diagnóstico en lenguaje
+    claro en el resumen de la ejecución, en lugar de sesenta líneas técnicas.</p>
+    <div class="campo">
+      <span class="et">Mensaje del commit</span>
+      <span class="msj">Diagnostico legible cuando falla la validacion</span>
+    </div>
+    <div class="ojo">
+      <h4>La ruta empieza con punto</h4>
+      <p>Se escribe <code>.github</code>, con el punto adelante. Si abres el enlace y la ruta
+      de arriba no dice <code>.github / workflows</code>, no confirmes: vuelve a abrir el
+      enlace desde aquí.</p>
+    </div>
+  </div>
+</section>
+
+<section class="paso">
+  <h3><span class="n">5</span> Raíz del repositorio · las guías <span class="t">3 archivos</span></h3>
+  <div class="cuerpo">
+    <div class="ir">
+      <span class="et">Abre este enlace</span><br>
+      <a href="https://github.com/hlopez-prog/dashboard-rrhh/upload/main">https://github.com/hlopez-prog/dashboard-rrhh/upload/main</a>
+    </div>
+    <p>Arrastra los 3 archivos de <code>para-5-raiz</code>:
+    <code>GUIA_ACTUALIZAR_BASE.html</code>, <code>README.md</code> y
+    <code>GUIA_APLICAR_CAMBIOS.html</code> — esta misma guía, para que quede en el
+    repositorio junto a las demás.</p>
+    <p>Esta carga corrige algo que importa más de lo que parece. La guía del cierre mensual
+    que le dimos a tu gente decía, en su lista de verificación:
+    <em>“No hay celdas numéricas vacías (escribí 0 donde no hubo dato)”</em>. Esa instrucción
+    era mía y es el origen del problema. Ahora dice lo contrario, con una tabla de qué columna
+    es obligatoria en cada hoja y cuáles pueden quedar vacías.</p>
+    <div class="campo">
+      <span class="et">Mensaje del commit</span>
+      <span class="msj">Documentacion: vacio no es cero</span>
+    </div>
+    <div class="ojo">
+      <h4>Esta carga no dispara ninguna ejecución</h4>
+      <p>La automatización solo se activa cuando cambian datos, código o pruebas. Un cambio
+      en las guías no republica el tablero: no te quedes esperando un ✓ que no va a aparecer.</p>
+    </div>
+  </div>
+</section>
+
+<section class="paso">
+  <h3><span class="n">6</span> Carpeta <code>data</code> · la base de datos <span class="t">1 archivo</span></h3>
+  <div class="cuerpo">
+    <div class="ir">
+      <span class="et">Abre este enlace</span><br>
+      <a href="https://github.com/hlopez-prog/dashboard-rrhh/upload/main/data">https://github.com/hlopez-prog/dashboard-rrhh/upload/main/data</a>
+    </div>
+    <p>Arrastra <code>BASE_RRHH.xlsx</code> de <code>para-6-data</code>. Es la carga que
+    cierra todo.</p>
+    <div class="envoltura">
+      <table>
+        <thead><tr><th>Hoja</th><th>Qué trae</th></tr></thead>
+        <tbody>
+          <tr><td class="mono">fact_plantilla</td><td>86 filas reales · 13 meses · 263 → 302 personas</td></tr>
+          <tr><td class="mono">dim_unidad · dim_area · metas</td><td>Los catálogos, sin cambios</td></tr>
+          <tr><td class="mono">las otras cinco hojas</td><td>Vacías, con encabezados y desplegables listos para capturar</td></tr>
+          <tr><td class="mono">LEEME · origen</td><td><code>REAL</code> — se retira el aviso naranja de datos demo</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="campo">
+      <span class="et">Mensaje del commit</span>
+      <span class="msj">Cierre 2026-08: plantilla real, hojas sin capturar vacias</span>
+    </div>
+    <div class="revisa">
+      <h4>Aquí sí espera el verde</h4>
+      <p>Ve a la pestaña <span class="btn-gris">Actions</span>. En 3 o 4 minutos los dos
+      trabajos —<em>Validar datos, KPIs e interfaz</em> y <em>Publicar en GitHub Pages</em>—
+      deben quedar en ✓ verde. Después abre el tablero y refresca con
+      <strong>Ctrl+F5</strong>.</p>
+    </div>
+  </div>
+</section>
+
+<section class="paso opcional">
+  <h3><span class="n">7</span> Carpeta <code>data/csv</code> · el export <span class="t">opcional · 9 archivos</span></h3>
+  <div class="cuerpo">
+    <div class="ir">
+      <span class="et">Abre este enlace</span><br>
+      <a href="https://github.com/hlopez-prog/dashboard-rrhh/upload/main/data/csv">https://github.com/hlopez-prog/dashboard-rrhh/upload/main/data/csv</a>
+    </div>
+    <p>Arrastra los 9 archivos de <code>para-7-data-csv-opcional</code>.</p>
+    <p>Son el export automático que hace legible el <em>diff</em> en git: sirven para auditar
+    quién cambió qué número y cuándo. Nadie los lee para calcular: el tablero siempre usa el
+    Excel. Si no los subes, en el repositorio quedan los del cierre anterior y no pasa nada.</p>
+    <div class="campo">
+      <span class="et">Mensaje del commit</span>
+      <span class="msj">Regenera el export CSV del cierre</span>
+    </div>
+  </div>
+</section>
+
+<h2 class="seccion">Qué vas a ver en la pestaña Actions</h2>
+
+<div class="paso">
+  <div class="cuerpo">
+    <figure>
+      <svg viewBox="0 0 900 300" role="img" aria-label="Pestaña Actions mostrando cinco ejecuciones en rojo y la última en verde después de subir la base">
+        <rect width="900" height="300" fill="#fff"/>
+        <rect x="0" y="0" width="900" height="34" fill="#f6f8fa"/>
+        <line x1="0" y1="34" x2="900" y2="34" stroke="#d1d9e0"/>
+        <text x="20" y="21" font-family="system-ui" font-size="12" fill="#24292f" font-weight="600">Actions</text>
+        <text x="20" y="60" font-family="system-ui" font-size="13" font-weight="600" fill="#1f2328">Validar y publicar Dashboard de RRHH</text>
+        <line x1="20" y1="70" x2="880" y2="70" stroke="#d1d9e0"/>
+
+        <!-- fila verde -->
+        <circle cx="34" cy="92" r="8" fill="#1a7f37"/>
+        <text x="30" y="96" font-family="system-ui" font-size="10" fill="#fff">✓</text>
+        <text x="54" y="96" font-family="system-ui" font-size="12.5" font-weight="600" fill="#1f2328">Cierre 2026-08: plantilla real, hojas sin capturar vacias</text>
+        <text x="480" y="96" font-family="system-ui" font-size="11.5" fill="#59636e">carga 6 · la base</text>
+        <rect x="586" y="80" width="290" height="24" rx="4" fill="#d9ead3" stroke="#a8c69a"/>
+        <text x="731" y="96" font-family="system-ui" font-size="11.5" font-weight="700" fill="#274e13" text-anchor="middle">publicó — el tablero ya tiene los datos</text>
+
+        <!-- filas rojas -->
+        <g>
+          <circle cx="34" cy="130" r="8" fill="#b3261e"/>
+          <text x="30" y="134" font-family="system-ui" font-size="10" fill="#fff">✗</text>
+          <text x="54" y="134" font-family="system-ui" font-size="12.5" fill="#1f2328">Diagnostico legible cuando falla la validacion</text>
+          <text x="480" y="134" font-family="system-ui" font-size="11.5" fill="#59636e">carga 4</text>
+
+          <circle cx="34" cy="162" r="8" fill="#b3261e"/>
+          <text x="30" y="166" font-family="system-ui" font-size="10" fill="#fff">✗</text>
+          <text x="54" y="166" font-family="system-ui" font-size="12.5" fill="#1f2328">Pruebas de datos incompletos</text>
+          <text x="480" y="166" font-family="system-ui" font-size="11.5" fill="#59636e">carga 3</text>
+
+          <circle cx="34" cy="194" r="8" fill="#b3261e"/>
+          <text x="30" y="198" font-family="system-ui" font-size="10" fill="#fff">✗</text>
+          <text x="54" y="198" font-family="system-ui" font-size="12.5" fill="#1f2328">Los indicadores distinguen un cero de un dato faltante</text>
+          <text x="480" y="198" font-family="system-ui" font-size="11.5" fill="#59636e">carga 2</text>
+
+          <circle cx="34" cy="226" r="8" fill="#b3261e"/>
+          <text x="30" y="230" font-family="system-ui" font-size="10" fill="#fff">✗</text>
+          <text x="54" y="230" font-family="system-ui" font-size="12.5" fill="#1f2328">Columnas opcionales, nulos y diagnostico agrupado</text>
+          <text x="480" y="230" font-family="system-ui" font-size="11.5" fill="#59636e">carga 1</text>
+        </g>
+        <rect x="586" y="118" width="290" height="124" rx="4" fill="#fce5cd" stroke="#e8c39e"/>
+        <text x="731" y="168" font-family="system-ui" font-size="11.5" font-weight="700" fill="#7a3e00" text-anchor="middle">estas cuatro en rojo son correctas:</text>
+        <text x="731" y="186" font-family="system-ui" font-size="11.5" fill="#7a3e00" text-anchor="middle">el código ya está, la base todavía no.</text>
+        <text x="731" y="210" font-family="system-ui" font-size="11.5" fill="#7a3e00" text-anchor="middle">el tablero sigue con el cierre anterior</text>
+      </svg>
+      <figcaption>Se lee de abajo hacia arriba: lo más reciente queda arriba. La carga 5 (las
+      guías) no aparece en esta lista porque no dispara ejecución.</figcaption>
+    </figure>
+    <div class="revisa">
+      <h4>Ahora un ✗ te sirve para algo</h4>
+      <p>Si después de la carga 6 algo quedara en rojo, abre esa ejecución. Arriba, en el
+      resumen, vas a encontrar el diagnóstico: cuántas celdas hay que corregir, agrupadas por
+      problema, con la hoja, la columna y los <strong>rangos de filas exactos</strong> del
+      Excel, y qué escribir en cada caso. Ya no son sesenta líneas técnicas.</p>
+    </div>
+  </div>
+</div>
+
+<h2 class="seccion">Cómo saber que quedó bien</h2>
+
+<div class="paso">
+  <div class="cuerpo">
+    <p>Abre el tablero y revisa cuatro cosas concretas:</p>
+    <div class="envoltura">
+      <table>
+        <thead><tr><th>Dónde</th><th>Qué debe decir</th></tr></thead>
+        <tbody>
+          <tr><td>Encabezado, arriba a la derecha</td><td><strong>Cierre agosto 2026</strong> · 13 meses de historia</td></tr>
+          <tr><td>Aviso naranja de datos demo</td><td>Ya no aparece</td></tr>
+          <tr><td>Tarjeta <em>Fuerza laboral total</em></td><td><strong>302 personas</strong>, con su línea de tendencia</td></tr>
+          <tr><td>Las demás tarjetas</td><td>“—”, no ceros. Eso es correcto: esos módulos aún no se capturan</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="ojo">
+      <h4>Si ves ceros en lugar de guiones</h4>
+      <p>Alguna carga de código no llegó. Refresca con Ctrl+F5 primero, porque el navegador
+      guarda copia de los archivos. Si siguen los ceros, revisa que las cargas 1 y 2 estén
+      completas en el repositorio.</p>
+    </div>
+  </div>
+</div>
+
+<h2 class="seccion">Lo que sigue, y la línea que no hay que cruzar</h2>
+
+<div class="paso">
+  <div class="cuerpo">
+    <p>Con esto el tablero queda al día. El trabajo siguiente es la captura, y sugiero este
+    orden porque es el que más desbloquea:</p>
+    <div class="envoltura">
+      <table>
+        <thead><tr><th>#</th><th>Hoja</th><th>Qué habilita en el tablero</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td class="mono">fact_movimientos</td><td>Rotación anualizada, voluntaria y temprana. La conversación de siempre</td></tr>
+          <tr><td>2</td><td class="mono">fact_ausentismo</td><td>Ausentismo, y el sustento de las horas extra</td></tr>
+          <tr><td>3</td><td class="mono">fact_nomina</td><td>Costo laboral, costo por empleado y, con toneladas, productividad</td></tr>
+          <tr><td>4</td><td class="mono">fact_capacitacion</td><td>Cumplimiento DC-3 y matriz de competencias</td></tr>
+          <tr><td>5</td><td class="mono">fact_relaciones_laborales</td><td>Sindicalización, riesgo sindical y eNPS</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>De cada hoja solo son obligatorias sus llaves —periodo, unidad, área— y la magnitud
+    base. Todo el detalle es opcional y puede quedar vacío. Y en plantilla faltan las áreas y
+    unidades que no se capturaron: <strong>Mina Realito no tiene ninguna fila</strong> en los
+    13 meses.</p>
+    <div class="aviso" style="margin:16px 0 0">
+      <h3>Antes de cargar la primera nómina real: repositorio privado</h3>
+      <p>El repositorio es <strong>público</strong>. La plantilla agregada que vas a subir ya
+      estaba en el historial, así que esta carga no expone nada nuevo. La nómina es otra cosa:
+      en el momento en que se cargue, el costo laboral por unidad queda visible para cualquiera
+      en internet, y <strong>el historial de git lo conserva aunque después borres el
+      archivo</strong>.</p>
+      <p>Hacerlo privado <em>después</em> no alcanza. Hay que crear un repositorio nuevo
+      privado —plan GitHub Team o superior— y publicar ahí. Es el paso que conviene dar
+      <strong>antes</strong> de capturar nómina, no después. Pídeme el paso a paso cuando
+      quieras y lo armamos.</p>
+    </div>
+  </div>
+</div>
+
+<h2 class="seccion">Lista para tachar</h2>
+
+<div class="paso">
+  <div class="cuerpo">
+    <ul class="check">
+      <li>Carga 1 · <code>etl</code> — los 5 archivos aparecen con el commit nuevo</li>
+      <li>Carga 2 · <code>public/assets/js</code> — los 3 archivos</li>
+      <li>Carga 3 · <code>tests</code> — los 4 archivos, después de la carga 1</li>
+      <li>Carga 4 · <code>.github/workflows</code> — la ruta decía <code>.github / workflows</code></li>
+      <li>Carga 5 · raíz — los 3 archivos de guías (sin ejecución, es normal)</li>
+      <li>Carga 6 · <code>data</code> — <code>BASE_RRHH.xlsx</code>, y los dos trabajos en ✓ verde</li>
+      <li>Carga 7 · <code>data/csv</code> — opcional</li>
+      <li>El tablero dice <strong>Cierre agosto 2026</strong> y ya no muestra el aviso de demo</li>
+      <li>La fuerza laboral total dice <strong>302 personas</strong></li>
+      <li>Donde no hay dato aparece “—” y no cero</li>
+      <li>Ningún archivo quedó suelto en la raíz que debiera estar en una carpeta</li>
+    </ul>
+  </div>
+</div>
+
+<p class="pie-doc">Dashboard de RRHH · Minera Rio Tinto · Guía para aplicar los cambios de
+<code>actualizacion-real</code>. El orden de las cargas no es preferencia: el código nuevo
+tiene que estar antes que la base nueva, o la validación rechaza el libro.</p>
+
+</main>
+</body>
+</html>

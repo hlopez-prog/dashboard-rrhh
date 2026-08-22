@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="es-MX">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Guía mensual · Actualizar la base de datos del Dashboard de RRHH</title>
+<style>
+:root{
+  --negro:#000;--verde:#d9ead3;--naranja:#fce5cd;--gris:#f2f2f2;
+  --verde-borde:#a8c69a;--verde-texto:#274e13;
+  --naranja-borde:#e8c39e;--naranja-texto:#7a3e00;
+  --gris-borde:#d5d5d5;
+  --sup:#fff;--plano:#fafafa;--ink1:#0b0b0b;--ink2:#4a4a48;--ink3:#79776f;
+  --linea:#e2e2de;--azul:#2a78d6;
+  --f:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:var(--f);font-size:15px;line-height:1.6;color:var(--ink1);background:var(--plano)}
+.banner{background:var(--gris);border-bottom:2px solid var(--negro);padding:22px 24px 18px}
+.wrap{max-width:1020px;margin:0 auto}
+.banner h1{margin:0;font-size:24px;letter-spacing:-.01em}
+.banner p{margin:4px 0 0;font-size:13px;color:var(--ink2)}
+.banner .org{text-transform:uppercase;letter-spacing:.08em;font-size:12px}
+
+.config{background:var(--negro);color:#fff;padding:14px 24px}
+.config .wrap{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.config label{font-size:12.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#d8d8d4}
+.config input{font:inherit;font-size:15px;padding:7px 11px;border:0;border-radius:4px;min-width:150px}
+.config .hint{font-size:12.5px;color:#b9b9b4}
+.config .ok{font-size:12.5px;color:var(--verde);font-weight:700}
+
+main{max-width:1020px;margin:0 auto;padding:24px 24px 80px}
+
+.resumen{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));margin-bottom:24px}
+.tarjeta{background:var(--sup);border:1px solid var(--linea);border-radius:4px;padding:12px 14px}
+.tarjeta .et{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3)}
+.tarjeta .val{font-size:24px;font-weight:700;line-height:1.15;margin-top:3px;letter-spacing:-.02em}
+.tarjeta .sub{font-size:12px;color:var(--ink2);margin-top:2px}
+
+.aviso{background:var(--naranja);border:1px solid var(--naranja-borde);border-radius:4px;
+  padding:12px 16px;color:var(--naranja-texto);font-size:14px;margin-bottom:24px}
+.aviso strong{color:#5c2f00}
+
+.paso{background:var(--sup);border:1px solid var(--linea);border-radius:4px;
+  margin-bottom:22px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.05)}
+.paso>h2{margin:0;background:var(--negro);color:#fff;font-size:17px;padding:12px 18px;
+  display:flex;align-items:center;gap:12px}
+.paso>h2 .n{background:#fff;color:var(--negro);width:26px;height:26px;border-radius:50%;
+  display:inline-flex;align-items:center;justify-content:center;font-size:14px;flex:0 0 auto}
+.paso>h2 .t{font-size:12px;font-weight:400;color:#b9b9b4;margin-left:auto;white-space:nowrap}
+.cuerpo{padding:18px}
+.cuerpo h3{font-size:14.5px;margin:20px 0 8px}
+.cuerpo h3:first-child{margin-top:0}
+
+.ir{background:var(--gris);border:1px solid var(--gris-borde);border-radius:4px;
+  padding:12px 14px;margin:0 0 18px}
+.ir .et{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--ink3)}
+.ir a{display:inline-block;margin-top:5px;font-family:var(--mono);font-size:13.5px;
+  color:var(--azul);word-break:break-all;font-weight:600}
+.ir a.pendiente{color:var(--ink3);pointer-events:none;text-decoration:none}
+.ir .nota{margin:6px 0 0;font-size:12.5px;color:var(--ink2)}
+
+ol.pasos{margin:0 0 4px;padding-left:22px}
+ol.pasos>li{margin-bottom:11px}
+ul.simple{margin:6px 0;padding-left:20px}
+ul.simple li{margin-bottom:5px}
+
+.btn-lit{display:inline-block;background:#1f883d;color:#fff;border-radius:5px;
+  padding:1px 9px;font-size:13px;font-weight:600;white-space:nowrap}
+.btn-gris{display:inline-block;background:#f6f8fa;border:1px solid #d1d9e0;border-radius:5px;
+  padding:1px 8px;font-size:13px;font-weight:600;white-space:nowrap;color:#24292f}
+.lit{font-family:var(--mono);font-size:13.5px;background:var(--gris);
+  border:1px solid var(--gris-borde);border-radius:3px;padding:1px 5px}
+code{font-family:var(--mono);font-size:13.5px;background:var(--gris);border-radius:3px;padding:1px 5px}
+
+figure{margin:16px 0;padding:0}
+figure svg{display:block;width:100%;height:auto;border:1px solid var(--gris-borde);
+  border-radius:5px;background:#fff}
+figcaption{font-size:12.5px;color:var(--ink3);margin-top:6px;font-style:italic}
+
+.hallar{background:var(--naranja);border:1px solid var(--naranja-borde);border-radius:4px;
+  padding:12px 14px;margin-top:16px}
+.hallar h4{margin:0 0 6px;font-size:13px;color:var(--naranja-texto);text-transform:uppercase;letter-spacing:.05em}
+.hallar p,.hallar li{font-size:13.5px;color:#5c2f00;margin:5px 0}
+
+.listo{background:var(--verde);border:1px solid var(--verde-borde);border-radius:4px;
+  padding:12px 14px;margin-top:16px}
+.listo h4{margin:0 0 6px;font-size:13px;color:var(--verde-texto);text-transform:uppercase;letter-spacing:.05em}
+.listo p,.listo li{font-size:13.5px;color:#1e3b0e;margin:5px 0}
+
+table{width:100%;border-collapse:collapse;font-size:13.5px;margin:14px 0}
+th{background:var(--negro);color:#fff;text-align:left;padding:8px 10px;font-weight:600;vertical-align:bottom}
+td{padding:7px 10px;border-bottom:1px solid var(--linea);vertical-align:top}
+tbody tr:nth-child(even) td{background:#fcfcfc}
+td.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.tabla-envoltura{overflow-x:auto}
+
+.check{list-style:none;padding:0;margin:8px 0}
+.check li{padding:6px 0 6px 28px;position:relative;border-bottom:1px solid var(--linea);font-size:14px}
+.check li:before{content:"";position:absolute;left:2px;top:9px;width:15px;height:15px;
+  border:1.5px solid var(--ink3);border-radius:3px}
+
+.pie{border-top:1px solid var(--linea);margin-top:30px;padding-top:16px;font-size:12.5px;color:var(--ink3)}
+
+@media print{ .config{background:#fff;color:#000;border-bottom:1px solid #000} .paso{break-inside:avoid} }
+@media(max-width:640px){ main,.banner,.config{padding-left:14px;padding-right:14px} .banner h1{font-size:20px} }
+</style>
+</head>
+<body>
+
+<header class="banner">
+  <div class="wrap">
+    <p class="org">Minera Rio Tinto · Dirección de RRHH</p>
+    <h1>Actualizar la base de datos del tablero</h1>
+    <p>Rutina del cierre mensual: bajar el libro de Excel, capturar el mes, subirlo a GitHub.
+       El tablero se republica solo. Sin instalar nada, todo desde el navegador y Excel.</p>
+  </div>
+</header>
+
+<div class="config">
+  <div class="wrap">
+    <label for="usuario">Usuario de GitHub</label>
+    <input id="usuario" type="text" value="hlopez-prog" autocomplete="off" spellcheck="false">
+    <label for="repo" style="margin-left:8px">Repositorio</label>
+    <input id="repo" type="text" value="dashboard-rrhh" autocomplete="off" spellcheck="false">
+    <span class="ok" id="hint">Enlaces listos.</span>
+  </div>
+</div>
+
+<main>
+
+<div class="resumen">
+  <div class="tarjeta">
+    <div class="et">Último cierre cargado</div>
+    <div class="val">julio 2026</div>
+    <div class="sub">24 meses de historia</div>
+  </div>
+  <div class="tarjeta">
+    <div class="et">Próximo cierre</div>
+    <div class="val">2026-08</div>
+    <div class="sub">así se escribe en la columna <code>periodo</code></div>
+  </div>
+  <div class="tarjeta">
+    <div class="et">Filas por cierre</div>
+    <div class="val">212</div>
+    <div class="sub">en la estructura de 8 unidades y 7 áreas</div>
+  </div>
+  <div class="tarjeta">
+    <div class="et">Tiempo del trámite</div>
+    <div class="val">10 min</div>
+    <div class="sub">sin contar la captura de datos</div>
+  </div>
+</div>
+
+<div class="aviso">
+  <strong>Antes de cargar datos reales.</strong> Mientras el repositorio sea público, solo van los
+  datos demo. Un repositorio público expone los archivos y todo el historial, y borrar un archivo
+  después no lo borra del historial. Para el cierre real de la operación hace falta repositorio
+  privado, y eso requiere plan GitHub Team o superior. Ver <em>Seguridad de los datos</em> en el
+  <code>README.md</code> del repositorio.
+</div>
+
+<!-- ============ EL CICLO ============ -->
+<section class="paso">
+  <h2><span class="n">↻</span> El ciclo completo, de un vistazo</h2>
+  <div class="cuerpo">
+    <figure>
+      <svg viewBox="0 0 900 190" role="img" aria-label="Diagrama del ciclo mensual de actualización">
+        <rect width="900" height="190" fill="#fff"/>
+        <!-- 1 -->
+        <rect x="16" y="46" width="150" height="66" rx="6" fill="#f2f2f2" stroke="#d5d5d5"/>
+        <circle cx="34" cy="64" r="11" fill="#000"/>
+        <text x="34" y="68" font-family="system-ui" font-size="11" font-weight="700" fill="#fff" text-anchor="middle">1</text>
+        <text x="52" y="68" font-family="system-ui" font-size="12.5" font-weight="700" fill="#0b0b0b">Bajar el libro</text>
+        <text x="28" y="90" font-family="system-ui" font-size="11" fill="#4a4a48">de GitHub, no una</text>
+        <text x="28" y="104" font-family="system-ui" font-size="11" fill="#4a4a48">copia vieja del disco</text>
+        <path d="M172 79 L196 79" stroke="#000" stroke-width="2"/>
+        <path d="M196 79 l-7 -4 v8 z" fill="#000"/>
+        <!-- 2 -->
+        <rect x="202" y="46" width="150" height="66" rx="6" fill="#d9ead3" stroke="#a8c69a"/>
+        <circle cx="220" cy="64" r="11" fill="#000"/>
+        <text x="220" y="68" font-family="system-ui" font-size="11" font-weight="700" fill="#fff" text-anchor="middle">2</text>
+        <text x="238" y="68" font-family="system-ui" font-size="12.5" font-weight="700" fill="#0b0b0b">Capturar en Excel</text>
+        <text x="214" y="90" font-family="system-ui" font-size="11" fill="#274e13">agregar 212 filas del</text>
+        <text x="214" y="104" font-family="system-ui" font-size="11" fill="#274e13">mes nuevo, no borrar</text>
+        <path d="M358 79 L382 79" stroke="#000" stroke-width="2"/>
+        <path d="M382 79 l-7 -4 v8 z" fill="#000"/>
+        <!-- 3 -->
+        <rect x="388" y="46" width="150" height="66" rx="6" fill="#f2f2f2" stroke="#d5d5d5"/>
+        <circle cx="406" cy="64" r="11" fill="#000"/>
+        <text x="406" y="68" font-family="system-ui" font-size="11" font-weight="700" fill="#fff" text-anchor="middle">3</text>
+        <text x="424" y="68" font-family="system-ui" font-size="12.5" font-weight="700" fill="#0b0b0b">Subir el libro</text>
+        <text x="400" y="90" font-family="system-ui" font-size="11" fill="#4a4a48">a la carpeta data, con</text>
+        <text x="400" y="104" font-family="system-ui" font-size="11" fill="#4a4a48">el mismo nombre</text>
+        <path d="M544 79 L568 79" stroke="#000" stroke-width="2"/>
+        <path d="M568 79 l-7 -4 v8 z" fill="#000"/>
+        <!-- 4 -->
+        <rect x="574" y="46" width="150" height="66" rx="6" fill="#f2f2f2" stroke="#d5d5d5"/>
+        <circle cx="592" cy="64" r="11" fill="#000"/>
+        <text x="592" y="68" font-family="system-ui" font-size="11" font-weight="700" fill="#fff" text-anchor="middle">4</text>
+        <text x="610" y="68" font-family="system-ui" font-size="12.5" font-weight="700" fill="#0b0b0b">GitHub valida</text>
+        <text x="586" y="90" font-family="system-ui" font-size="11" fill="#4a4a48">esquema, llaves y</text>
+        <text x="586" y="104" font-family="system-ui" font-size="11" fill="#4a4a48">reglas de negocio</text>
+        <path d="M730 79 L754 79" stroke="#1f883d" stroke-width="2"/>
+        <path d="M754 79 l-7 -4 v8 z" fill="#1f883d"/>
+        <!-- 5 -->
+        <rect x="760" y="46" width="126" height="66" rx="6" fill="#d9ead3" stroke="#a8c69a"/>
+        <text x="774" y="68" font-family="system-ui" font-size="12.5" font-weight="700" fill="#0b0b0b">Publica</text>
+        <text x="774" y="90" font-family="system-ui" font-size="11" fill="#274e13">el tablero queda</text>
+        <text x="774" y="104" font-family="system-ui" font-size="11" fill="#274e13">actualizado</text>
+
+        <!-- rama de error -->
+        <path d="M649 118 L649 150" stroke="#b45f06" stroke-width="2" stroke-dasharray="5 4"/>
+        <path d="M649 150 l-4 -7 h8 z" fill="#b45f06" transform="rotate(180 649 150)"/>
+        <rect x="470" y="140" width="416" height="34" rx="6" fill="#fce5cd" stroke="#e8c39e"/>
+        <text x="484" y="161" font-family="system-ui" font-size="11.5" fill="#7a3e00">
+          Si falla: NO publica, el tablero conserva el cierre anterior y el error dice hoja y fila
+        </text>
+        <text x="16" y="28" font-family="system-ui" font-size="12" font-weight="700" fill="#79776f">CICLO MENSUAL</text>
+      </svg>
+      <figcaption>El punto 4 es la red de seguridad: nunca llega un dato malo al comité, porque un
+      dato malo simplemente no se publica.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- ============ PASO 1 ============ -->
+<section class="paso">
+  <h2><span class="n">1</span> Bajar el libro de GitHub <span class="t">≈ 1 min</span></h2>
+  <div class="cuerpo">
+    <div class="ir">
+      <div class="et">Descarga directa del libro</div>
+      <a class="url pendiente" data-url="https://github.com/{U}/{R}/raw/main/data/BASE_RRHH.xlsx">…</a>
+      <p class="nota">Se descarga a tu carpeta de Descargas. Ábrelo desde ahí.</p>
+    </div>
+
+    <div class="hallar">
+      <h4>Por qué no trabajar sobre la copia de tu disco</h4>
+      <p>Baja el libro <strong>cada mes</strong>, aunque tengas uno en tu computadora. Si alguien
+      más del equipo cargó una corrección — una baja que se registró tarde, una meta que cambió —
+      esa corrección está en el libro del repositorio y no en tu copia. Subir tu copia vieja
+      <strong>borra el trabajo de la otra persona</strong>, porque el libro se reemplaza completo,
+      no se mezcla.</p>
+      <p>Regla simple: el libro que vive en GitHub es el bueno. El de tu disco es un borrador del
+      mes pasado.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PASO 2 ============ -->
+<section class="paso">
+  <h2><span class="n">2</span> Capturar el cierre en Excel <span class="t">lo que tarde el dato</span></h2>
+  <div class="cuerpo">
+
+    <h3>La regla que no se rompe</h3>
+    <p><strong>Se agregan filas del mes nuevo. Nunca se sobrescriben las de meses anteriores.</strong>
+    El tablero calcula rotación anualizada, rotación voluntaria y las demás tasas con
+    <em>ventana móvil de 12 meses</em>: si borras historia, esos indicadores dejan de poder
+    calcularse y aparecen vacíos. La historia es el activo, no el estorbo.</p>
+
+    <h3>Atajo práctico: copiar el bloque del mes anterior</h3>
+    <ol class="pasos">
+      <li>En la hoja, selecciona las filas completas del último periodo — en
+        <code>fact_plantilla</code> son las 68 filas de <code>2026-07</code>.</li>
+      <li>Copia y pega justo debajo, al final de la hoja.</li>
+      <li>Con el bloque nuevo <strong>todavía seleccionado</strong>, abre
+        <span class="lit">Ctrl+H</span> (Reemplazar), busca <code>2026-07</code> y reemplaza por
+        <code>2026-08</code>. Botón <strong>Reemplazar todos</strong>.
+        <br><strong>Ojo:</strong> con el bloque seleccionado, Excel solo reemplaza dentro de la
+        selección. Si no seleccionas nada primero, cambia toda la hoja y te borra la historia.</li>
+      <li>Ahora sí, actualiza las cifras del mes sobre ese bloque.</li>
+    </ol>
+    <p>Así heredas las claves de unidad y área correctas, y solo tocas números. Es más rápido y se
+    equivoca menos que capturar de cero.</p>
+
+    <h3>Qué se captura en cada hoja</h3>
+    <div class="tabla-envoltura">
+      <table>
+        <thead><tr>
+          <th style="width:20%">Hoja</th><th class="num" style="width:8%">Filas<br>por mes</th>
+          <th>Qué se captura</th><th style="width:20%">De dónde sale</th>
+        </tr></thead>
+        <tbody>
+          <tr>
+            <td><code>fact_plantilla</code></td><td class="num">68</td>
+            <td>headcount, dotación autorizada, mujeres, antigüedad promedio, puestos críticos
+                totales y cubiertos. Una fila por unidad, área y <code>tipo_relacion</code>
+                (Propio / Contratista)</td>
+            <td>Nómina y control de plazas</td>
+          </tr>
+          <tr>
+            <td><code>fact_movimientos</code></td><td class="num">34</td>
+            <td>altas, bajas voluntarias, bajas involuntarias, bajas con menos de 90 días,
+                vacantes abiertas, días promedio de cobertura</td>
+            <td>Reclutamiento y administración de personal</td>
+          </tr>
+          <tr>
+            <td><code>fact_ausentismo</code></td><td class="num">34</td>
+            <td>horas programadas, horas de ausencia, casos y días de incapacidad</td>
+            <td>Control de asistencia e IMSS</td>
+          </tr>
+          <tr>
+            <td><code>fact_nomina</code></td><td class="num">34</td>
+            <td>costo ordinario, costo de horas extra, prestaciones, horas ordinarias, horas extra,
+                presupuesto autorizado, toneladas movidas</td>
+            <td>Nómina y Planeación / Operaciones para las toneladas</td>
+          </tr>
+          <tr>
+            <td><code>fact_capacitacion</code></td><td class="num">34</td>
+            <td>horas plan, horas reales, participantes, DC-3 requeridos y emitidos, inversión,
+                competencias críticas requeridas y acreditadas</td>
+            <td>Capacitación y desarrollo</td>
+          </tr>
+          <tr>
+            <td><code>fact_relaciones_laborales</code></td><td class="num">8</td>
+            <td>sindicato, sindicalizados, emplazamientos, conflictos abiertos y cerrados, días a
+                revisión de CCT, riesgo sindical (1–5), eNPS, participación en clima.
+                Una fila por unidad, sin desglose por área</td>
+            <td>Relaciones Laborales</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="font-size:13px;color:var(--ink2)">Las hojas <code>dim_unidad</code>,
+    <code>dim_area</code> y <code>metas</code> son catálogos: <strong>no se tocan cada mes</strong>,
+    solo cuando abre una unidad nueva o cambian las metas del año.</p>
+
+    <h3>Las cuatro cosas que hacen fallar la validación</h3>
+    <div class="tabla-envoltura">
+      <table>
+        <thead><tr><th style="width:26%">Qué pasa</th><th>Cómo evitarlo</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Excel convierte el periodo en fecha</strong></td>
+              <td>La columna <code>periodo</code> ya viene formateada como <strong>Texto</strong>.
+                  No cambies ese formato ni uses "Formato de celdas → General" sobre ella. Se
+                  escribe <code>2026-08</code>, nunca <code>ago-26</code> ni <code>01/08/2026</code></td></tr>
+          <tr><td><strong>Una clave que no existe</strong></td>
+              <td>Usa los <strong>desplegables</strong> de <code>unidad_id</code>,
+                  <code>area_id</code>, <code>tipo_relacion</code> y <code>turno</code>. Si necesitas
+                  una unidad nueva, agrégala primero a <code>dim_unidad</code></td></tr>
+          <tr><td><strong>Rellenar con ceros lo que no se sabe</strong></td>
+              <td>Un cero afirma un hecho: "no hubo mujeres en esa área", "el costo laboral fue
+                  de $0". Si no tienes el dato, <strong>deja la celda vacía</strong>: el tablero lo
+                  publica como "—". Solo escribe <code>0</code> cuando el cero es la medición
+                  real. Las columnas obligatorias son la excepción: ésas no pueden quedar vacías
+                  (ver el recuadro de abajo)</td></tr>
+          <tr><td><strong>Renombrar o mover columnas</strong></td>
+              <td>Los encabezados se validan exactos y en orden. No los reordenes ni les cambies el
+                  nombre. Tampoco borres ni renombres hojas</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Qué es obligatorio y qué puede quedar vacío</h3>
+    <p>Es la distinción que más errores de validación causa, y la que más fácil hace que un tablero
+    mienta. La regla es una sola:</p>
+    <div class="listo">
+      <h4>Vacío significa “no lo sabemos”. Cero significa “medimos, y es cero”.</h4>
+      <p>Si dejas la celda vacía, el tablero publica <strong>“—”</strong> y ese indicador no se
+      calcula. Si escribes <code>0</code>, el tablero lo toma como un hecho verificado y lo suma.
+      Escribir ceros para “dejar la hoja limpia” es la forma más rápida de reportar al comité una
+      rotación de 0&nbsp;% que nadie midió.</p>
+    </div>
+    <p><strong>Obligatorio</strong> en cada hoja de hechos: las columnas de la llave
+    (<code>periodo</code>, <code>unidad_id</code>, <code>area_id</code> y en plantilla también
+    <code>tipo_relacion</code>) más la magnitud base de la hoja:</p>
+    <div class="tabla-envoltura">
+      <table>
+        <thead><tr><th>Hoja</th><th>Además de la llave, no puede faltar</th></tr></thead>
+        <tbody>
+          <tr><td><code>fact_plantilla</code></td><td><code>headcount</code></td></tr>
+          <tr><td><code>fact_movimientos</code></td><td><code>altas</code>,
+            <code>bajas_voluntarias</code>, <code>bajas_involuntarias</code></td></tr>
+          <tr><td><code>fact_ausentismo</code></td><td><code>horas_programadas</code>,
+            <code>horas_ausencia</code></td></tr>
+          <tr><td><code>fact_nomina</code></td><td><code>costo_ordinario</code>,
+            <code>horas_ordinarias</code></td></tr>
+          <tr><td><code>fact_capacitacion</code></td><td><code>horas_real</code>,
+            <code>dc3_requeridos</code>, <code>dc3_emitidos</code></td></tr>
+          <tr><td><code>fact_relaciones_laborales</code></td><td><code>sindicato</code>,
+            <code>trabajadores_sindicalizados</code>, <code>conflictos_abiertos</code>,
+            <code>riesgo_sindical</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p><strong>Todo lo demás es opcional</strong> y puede quedar vacío sin detener la publicación:
+    <code>turno</code>, <code>dotacion_autorizada</code>, <code>mujeres</code>,
+    <code>antiguedad_prom_meses</code>, los puestos críticos, <code>vacantes_abiertas</code>,
+    <code>dias_cobertura_prom</code>, las incapacidades, <code>costo_horas_extra</code>,
+    <code>costo_prestaciones</code>, <code>horas_extra</code>,
+    <code>presupuesto_costo_laboral</code>, <code>toneladas_movidas</code>,
+    <code>horas_plan</code>, <code>inversion_mxn</code>, <code>enps</code> y varias más. Cada una
+    que dejes vacía apaga solo su indicador; el resto del tablero sigue funcionando.</p>
+    <p>Y una hoja completa puede quedar <strong>totalmente vacía</strong>: si todavía no capturan
+    capacitación, esa hoja se queda con los encabezados y el tablero publica “—” en ese módulo.
+    No hace falta inventar un mes para poder desplegar.</p>
+
+    <h3>Antes de guardar: revisa la hoja LEEME</h3>
+    <p>La primera hoja del libro tiene un bloque <strong>Registros cargados</strong> que cuenta las
+    filas de cada hoja. Anota los conteos <em>antes</em> de capturar y compáralos después: cada
+    hoja que tocaste debe haber subido exactamente las filas que agregaste.</p>
+    <p>Si un conteo no subió, esa hoja se te olvidó. Si subió más de lo esperado, duplicaste filas
+    y la validación va a marcar llave duplicada.</p>
+
+    <div class="listo">
+      <h4>Cómo guardar</h4>
+      <p>Formato <strong>.xlsx</strong> (no .xls, no .csv) y <strong>con el mismo nombre</strong>:
+      <code>BASE_RRHH.xlsx</code>. Si Excel te ofrece "mantener este formato", acepta.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PASO 3 ============ -->
+<section class="paso">
+  <h2><span class="n">3</span> Subir el libro a GitHub <span class="t">≈ 2 min</span></h2>
+  <div class="cuerpo">
+    <div class="ir">
+      <div class="et">Carga, ya dentro de la carpeta data</div>
+      <a class="url pendiente" data-url="https://github.com/{U}/{R}/upload/main/data">…</a>
+      <p class="nota">Este enlace es importante: abre la carga <strong>dentro de
+      <code>data</code></strong>, que es donde vive el libro. Si lo subes en la raíz del
+      repositorio, el tablero no lo encuentra y quedas con dos libros distintos.</p>
+    </div>
+
+    <figure>
+      <svg viewBox="0 0 900 260" role="img" aria-label="Pantalla de carga dentro de la carpeta data">
+        <rect width="900" height="260" fill="#fff"/>
+        <rect x="0" y="0" width="900" height="34" fill="#f6f8fa"/>
+        <line x1="0" y1="34" x2="900" y2="34" stroke="#d1d9e0"/>
+        <text x="20" y="21" font-family="system-ui" font-size="12" fill="#24292f" font-weight="600">TU-USUARIO / dashboard-rrhh</text>
+
+        <text x="20" y="60" font-family="system-ui" font-size="14" font-weight="700" fill="#1f2328">Add files to</text>
+        <text x="112" y="60" font-family="system-ui" font-size="14" fill="#0969da" font-weight="700">dashboard-rrhh</text>
+        <text x="222" y="60" font-family="system-ui" font-size="14" fill="#59636e">/</text>
+        <text x="234" y="60" font-family="system-ui" font-size="14" fill="#0969da" font-weight="700">data</text>
+        <circle cx="292" cy="55" r="13" fill="#b45f06"/>
+        <text x="292" y="60" font-family="system-ui" font-size="13" font-weight="700" fill="#fff" text-anchor="middle">1</text>
+        <line x1="305" y1="55" x2="356" y2="55" stroke="#b45f06" stroke-width="2"/>
+        <text x="364" y="60" font-family="system-ui" font-size="12" font-weight="700" fill="#b45f06">Verifica que diga “data” antes de comitear</text>
+
+        <rect x="20" y="78" width="860" height="104" rx="6" fill="#f6f8fa" stroke="#8c959f" stroke-dasharray="7 5" stroke-width="2"/>
+        <text x="450" y="118" font-family="system-ui" font-size="14" fill="#59636e" text-anchor="middle" font-weight="600">Drag files here to add them to your repository</text>
+        <text x="450" y="142" font-family="system-ui" font-size="11.5" fill="#8b949e" text-anchor="middle">BASE_RRHH.xlsx</text>
+        <circle cx="855" cy="94" r="13" fill="#b45f06"/>
+        <text x="855" y="99" font-family="system-ui" font-size="13" font-weight="700" fill="#fff" text-anchor="middle">2</text>
+
+        <text x="20" y="204" font-family="system-ui" font-size="12.5" font-weight="700" fill="#1f2328">Commit changes</text>
+        <rect x="20" y="212" width="500" height="26" rx="5" fill="#fff" stroke="#8c959f"/>
+        <text x="30" y="229" font-family="system-ui" font-size="11.5" fill="#1f2328">Cierre 2026-08</text>
+        <circle cx="546" cy="225" r="13" fill="#b45f06"/>
+        <text x="546" y="230" font-family="system-ui" font-size="13" font-weight="700" fill="#fff" text-anchor="middle">3</text>
+        <rect x="600" y="212" width="132" height="26" rx="5" fill="#1f883d"/>
+        <text x="666" y="229" font-family="system-ui" font-size="12" fill="#fff" text-anchor="middle" font-weight="600">Commit changes</text>
+      </svg>
+      <figcaption>GitHub reemplaza el libro anterior porque tiene el mismo nombre. No hay que
+      borrar nada primero.</figcaption>
+    </figure>
+
+    <ol class="pasos">
+      <li>Confirma que arriba diga la ruta <code>dashboard-rrhh / data</code> ①.</li>
+      <li>Arrastra tu <code>BASE_RRHH.xlsx</code> al recuadro punteado ②.</li>
+      <li>En el mensaje ③ escribe el cierre, por ejemplo <code>Cierre 2026-08</code>. Ese texto es
+        lo que verás en el historial dentro de un año: que diga algo útil.</li>
+      <li><span class="btn-lit">Commit changes</span>.</li>
+    </ol>
+
+    <div class="hallar">
+      <h4>Si el libro lo edita más de una persona</h4>
+      <p>El libro se reemplaza completo en cada carga, no se mezcla. Dos personas capturando el
+      mismo mes en copias distintas = la última que sube gana y borra a la otra.</p>
+      <p>Con un equipo chico se resuelve acordando quién captura cada cierre. Si van a ser varios de
+      forma habitual, dímelo: conviene partir el libro por unidad, o mover la captura a algo con
+      edición concurrente.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PASO 4 ============ -->
+<section class="paso">
+  <h2><span class="n">4</span> Ver que la validación pase <span class="t">≈ 3 min de espera</span></h2>
+  <div class="cuerpo">
+    <div class="ir">
+      <div class="et">Corridas de validación y publicación</div>
+      <a class="url pendiente" data-url="https://github.com/{U}/{R}/actions">…</a>
+    </div>
+
+    <p>Al comitear, GitHub arranca solo. Son dos trabajos en orden:</p>
+    <div class="tabla-envoltura">
+      <table>
+        <thead><tr><th style="width:32%">Trabajo</th><th>Qué hace</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Validar datos, KPIs e interfaz</strong></td>
+              <td>Lee el libro, valida encabezados, tipos, llaves primarias, integridad
+                  referencial, catálogos y reglas de negocio. Luego corre las 73 pruebas
+                  automáticas y arma el tablero</td></tr>
+          <tr><td><strong>Publicar en GitHub Pages</strong></td>
+              <td>Sube el tablero actualizado</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="listo">
+      <h4>Los dos en verde: terminaste</h4>
+      <p>El tablero ya trae el cierre nuevo. Ábrelo y confirma que el encabezado diga
+      <strong>Cierre agosto 2026</strong>:</p>
+      <p><a class="url pendiente" data-url="https://{U}.github.io/{R}/" style="font-family:var(--mono);font-weight:700">…</a></p>
+      <p>Si el encabezado sigue diciendo el mes anterior, refresca con
+      <span class="lit">Ctrl+F5</span>: es caché del navegador.</p>
+    </div>
+
+    <div class="hallar">
+      <h4>Si sale en rojo</h4>
+      <p><strong>El tablero no se actualizó, y eso es intencional:</strong> conserva el cierre
+      anterior en lugar de publicar un número equivocado. No hay prisa ni daño; corriges y vuelves
+      a subir.</p>
+      <p>Para ver qué pasó: clic en la corrida roja → trabajo
+      <strong>Validar datos, KPIs e interfaz</strong> → busca el paso con la ✕ y ábrelo. El error
+      viene así:</p>
+      <p style="background:#fff;border:1px solid var(--naranja-borde);border-radius:3px;padding:8px 10px;font-family:var(--mono);font-size:12.5px">
+        ✗ [hoja fact_ausentismo fila 148] regla violada:<br>&nbsp;&nbsp;horas_ausencia &lt;= horas_programadas
+      </p>
+      <p>Se lee directo: abre el libro, hoja <code>fact_ausentismo</code>, fila 148, corrige, vuelve
+      a subir. El número de fila es el de Excel, no hay que traducir nada.</p>
+    </div>
+
+    <h3>Los errores más comunes y qué significan</h3>
+    <div class="tabla-envoltura">
+      <table>
+        <thead><tr><th style="width:42%">Mensaje</th><th>Qué corregir</th></tr></thead>
+        <tbody>
+          <tr><td><code>periodo inválido '2026-08-01 00:00:00'</code></td>
+              <td>Excel convirtió el periodo en fecha. Formatea la columna como Texto y reescribe
+                  <code>2026-08</code></td></tr>
+          <tr><td><code>llave duplicada ('2026-08','U01','A01','Propio')</code></td>
+              <td>Pegaste el bloque dos veces, o el reemplazo de periodo alcanzó filas que ya
+                  existían. Borra la fila repetida</td></tr>
+          <tr><td><code>'unidad_id' = 'U07' no existe en dim_unidad</code></td>
+              <td>Agrega la unidad al catálogo <code>dim_unidad</code> antes de usarla</td></tr>
+          <tr><td><code>'headcount' numérica está vacía</code></td>
+              <td><code>headcount</code> es obligatoria: sin ella la fila no significa nada.
+                  Escribe el número de personas. Si para ese mes y esa área no hay dato,
+                  <strong>borra la fila completa</strong> en lugar de dejarla a medias o poner un
+                  cero que nadie midió</td></tr>
+          <tr><td><code>'headcount' tiene el texto 'cuarenta'</code></td>
+              <td>Va el número, no la palabra</td></tr>
+          <tr><td><code>puestos críticos cubiertos &lt;= totales</code></td>
+              <td>No puedes tener más plazas cubiertas que existentes. Revisa las dos columnas</td></tr>
+          <tr><td><code>dc3_emitidos &lt;= dc3_requeridos</code></td>
+              <td>Mismo caso en capacitación</td></tr>
+          <tr><td><code>encabezados incorrectos</code></td>
+              <td>Se renombró o movió una columna. Baja el libro del repositorio y captura sobre
+                  ese</td></tr>
+          <tr><td><code>no tiene las hojas: …</code></td>
+              <td>Se renombró o borró una hoja. Mismo remedio</td></tr>
+          <tr><td>AVISO <code>meses faltantes en la serie</code></td>
+              <td>Es aviso, no error: publica igual. Te dice que hay un hueco en la historia, y con
+                  huecos las tasas anualizadas quedan incompletas</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PASO 5 ============ -->
+<section class="paso">
+  <h2><span class="n">5</span> Dejar rastro del cierre <span class="t">opcional, ≈ 2 min</span></h2>
+  <div class="cuerpo">
+    <div class="ir">
+      <div class="et">Historial legible, cifra por cifra</div>
+      <a class="url pendiente" data-url="https://github.com/{U}/{R}/commits/main/data/csv">…</a>
+    </div>
+    <p>Un <code>.xlsx</code> es binario: GitHub puede guardarlo, pero no mostrarte qué cambió
+    adentro. Por eso cada corrida exporta los datos a <code>data/csv/</code>. En ese historial
+    puedes abrir cualquier cierre y ver, <strong>línea por línea y en verde y rojo</strong>, qué
+    número cambió, quién lo cambió y cuándo.</p>
+    <p>Sirve para tres cosas concretas: reconstruir por qué un indicador se movió, sustentar una
+    cifra en comité, y auditoría interna. <strong>No edites esos CSV</strong> — se regeneran solos
+    en cada corrida y tu cambio se perdería.</p>
+  </div>
+</section>
+
+<!-- ============ CASOS ESPECIALES ============ -->
+<section class="paso">
+  <h2><span class="n">+</span> Cambios que no son del cierre mensual</h2>
+  <div class="cuerpo">
+
+    <h3>Abrir una unidad minera nueva</h3>
+    <ol class="pasos">
+      <li>Hoja <code>dim_unidad</code>: agrega una fila con <code>unidad_id</code> nuevo
+        (por ejemplo <code>U06</code>), nombre, estado, tipo de operación, mineral y
+        <code>es_corporativo</code> en 0.</li>
+      <li>A partir de ese momento la clave nueva aparece sola en los desplegables de las demás
+        hojas.</li>
+      <li>Captura sus filas de hechos del mes en curso. Sus tasas anualizadas aparecerán vacías
+        hasta que acumule 12 meses — es correcto, no es un error.</li>
+    </ol>
+    <p style="font-size:13.5px;color:var(--ink2)">La paleta de gráficos identifica hasta
+    <strong>8 unidades</strong> sin repetir color, validada para daltonismo. Con una novena, el
+    tablero dibuja las primeras 8 y avisa en pantalla cuáles dejó fuera, en lugar de repetir un
+    tono y hacer que dos unidades se vean iguales. Si abren una novena unidad, avísame: hay que
+    validar el color, no inventarlo.</p>
+
+    <h3>Cambiar las metas del año</h3>
+    <p>Hoja <code>metas</code>, columna <code>meta</code>. No cambies la columna <code>kpi</code>:
+    esos identificadores son los que el tablero busca. La columna <code>direccion</code> dice si el
+    indicador es <code>menor_mejor</code> (rotación, ausentismo, horas extra) o
+    <code>mayor_mejor</code> (cobertura, cumplimiento, eNPS).</p>
+    <p>El semáforo aplica <strong>3 % de tolerancia</strong> antes de marcar desviación, para no
+    encender alertas por redondeo.</p>
+
+    <h3>Agregar un área o cambiar la estructura</h3>
+    <p>Hoja <code>dim_area</code>. La columna <code>es_critica</code> en 1 marca las áreas que
+    sostienen continuidad operacional; eso alimenta el indicador de cobertura de puestos críticos y
+    los tiempos de cobertura diferenciados.</p>
+
+    <h3>Pasar de datos demo a datos reales</h3>
+    <ol class="pasos">
+      <li>Primero, repositorio privado — requiere plan GitHub Team o superior.</li>
+      <li>Hoja <strong>LEEME</strong> del libro: cambia la celda <strong>Origen de los datos</strong>
+        de <code>DEMO</code> a <code>REAL</code>. Eso retira la franja naranja del tablero.</li>
+      <li>Reemplaza el contenido de las hojas de hechos con la historia real que tengas.
+        Con 12 meses ya funcionan los anualizados; con menos, se van llenando.</li>
+    </ol>
+    <p><strong>Si alcanzaste a subir datos reales mientras el repositorio era público, no basta con
+    hacerlo privado.</strong> El historial de git conserva todo. Hay que crear un repositorio nuevo
+    y subir solo el estado actual.</p>
+  </div>
+</section>
+
+<!-- ============ CHECKLIST ============ -->
+<section class="paso">
+  <h2><span class="n">✓</span> Lista de verificación del cierre</h2>
+  <div class="cuerpo">
+    <p>Imprime esta lista o duplícala cada mes.</p>
+    <ul class="check">
+      <li>Bajé el libro <strong>del repositorio</strong>, no usé la copia de mi disco</li>
+      <li>Agregué filas del mes nuevo, no sobrescribí ningún mes anterior</li>
+      <li>El <code>periodo</code> quedó como texto <code>AAAA-MM</code></li>
+      <li>Usé los desplegables para <code>unidad_id</code>, <code>area_id</code>,
+        <code>tipo_relacion</code> y <code>turno</code></li>
+      <li>Las columnas obligatorias están llenas, y las de detalle que no tengo quedaron
+        <strong>vacías</strong> (no puse ceros inventados)</li>
+      <li>Los conteos de la hoja LEEME subieron lo esperado en las 6 hojas de hechos</li>
+      <li>Guardé como <code>.xlsx</code> con el mismo nombre <code>BASE_RRHH.xlsx</code></li>
+      <li>Subí el libro <strong>dentro de la carpeta <code>data</code></strong></li>
+      <li>El mensaje del commit dice el cierre, por ejemplo <code>Cierre 2026-08</code></li>
+      <li>Los dos trabajos de Actions quedaron en verde</li>
+      <li>El tablero abre y el encabezado dice el mes nuevo</li>
+      <li>Revisé un par de indicadores contra mi fuente, para descartar un dedazo que la
+        validación no puede detectar</li>
+    </ul>
+
+    <div class="hallar">
+      <h4>Lo que la validación no puede atrapar</h4>
+      <p>El sistema verifica que los datos sean <em>consistentes</em>: que las llaves existan, que
+      los tipos cuadren, que las ausencias no superen las horas programadas. <strong>No puede saber
+      si un número es correcto.</strong> Si capturas 450 en lugar de 540 de headcount, pasa la
+      validación sin problema.</p>
+      <p>Por eso el último punto de la lista importa: antes de llevarlo al comité, compara dos o
+      tres cifras del tablero contra tu fuente original. Diez segundos que evitan una corrección
+      pública.</p>
+    </div>
+  </div>
+</section>
+
+<div class="pie">
+  Dashboard de RRHH · Minera Rio Tinto · Guía del cierre mensual.<br>
+  Las maquetas son esquemáticas, para ubicar cada botón; la interfaz real de GitHub está en inglés y
+  puede verse ligeramente distinta. Cifras de referencia tomadas del libro al cierre julio 2026.
+</div>
+
+</main>
+
+<script>
+(function () {
+  var u = document.getElementById('usuario');
+  var r = document.getElementById('repo');
+  var hint = document.getElementById('hint');
+  var enlaces = Array.prototype.slice.call(document.querySelectorAll('a.url'));
+  var textos = Array.prototype.slice
+    .call(document.querySelectorAll('figure svg text, figure svg tspan'))
+    .filter(function (n) { return n.textContent.indexOf('TU-USUARIO') !== -1; })
+    .map(function (n) { return { nodo: n, original: n.textContent }; });
+
+  function limpiar(v) {
+    v = (v || '').trim();
+    var m = v.match(/github\.com\/([^\/\s]+)/i) || v.match(/^([^\/\s]+)\.github\.io/i);
+    if (m) v = m[1];
+    return v.replace(/^@/, '').replace(/[^A-Za-z0-9._-]/g, '');
+  }
+
+  function pintar() {
+    var usuario = limpiar(u.value);
+    var repo = limpiar(r.value) || 'dashboard-rrhh';
+    textos.forEach(function (t) {
+      t.nodo.textContent = t.original.replace(/TU-USUARIO/g, usuario || 'TU-USUARIO');
+    });
+    enlaces.forEach(function (a) {
+      var plantilla = a.getAttribute('data-url');
+      if (usuario) {
+        var url = plantilla.replace('{U}', usuario).replace('{R}', repo);
+        a.href = url; a.textContent = url;
+        a.target = '_blank'; a.rel = 'noopener';
+        a.classList.remove('pendiente');
+      } else {
+        a.removeAttribute('href');
+        a.textContent = plantilla.replace('{U}', 'TU-USUARIO').replace('{R}', repo);
+        a.classList.add('pendiente');
+      }
+    });
+    if (usuario) {
+      hint.textContent = 'Enlaces listos para ' + usuario + '/' + repo + '.';
+      hint.className = 'ok';
+    } else {
+      hint.textContent = 'Escribe tu usuario para activar los enlaces.';
+      hint.className = 'hint';
+    }
+  }
+
+  u.addEventListener('input', pintar);
+  r.addEventListener('input', pintar);
+  pintar();
+})();
+</script>
+</body>
+</html>
