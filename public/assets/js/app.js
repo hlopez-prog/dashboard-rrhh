@@ -200,17 +200,38 @@ function seriesUnidad(almacen, filtro, id) {
   const orden = almacen.unidades
     .map((u) => u.unidad_id)
     .filter((id2) => porUnidad.has(id2));
+
+  /* La paleta identifica hasta TOPE_SERIES unidades sin repetir color. Con más
+     unidades seleccionadas se recortan las últimas y se avisa en pantalla:
+     repetir tonos haría que dos unidades se vieran iguales, que es un error
+     silencioso, y un recorte no declarado se lee como "aquí está todo". */
+  const visibles = orden.slice(0, g.TOPE_SERIES);
+  const omitidas = orden.slice(g.TOPE_SERIES)
+    .map((uid) => almacen.unidadPorId.get(uid)?.unidad || uid);
+
   /* El color sigue al índice de la unidad en dim_unidad: filtrar no repinta. */
-  return orden.map((uid) => {
+  const series = visibles.map((uid) => {
     const idx = almacen.unidades.findIndex((u) => u.unidad_id === uid);
     const u = almacen.unidadPorId.get(uid);
     return {
       nombre: u ? u.unidad : uid,
-      abrev: (u ? u.unidad : uid).replace(/^(Mina|Unidad|Planta Concentradora)\s+/, ''),
+      abrev: (u ? u.unidad : uid)
+        .replace(/^(Mina|Unidad|Planta Concentradora|Planta)\s+/, ''),
       color: g.color(idx),
       valores: porUnidad.get(uid).map((x) => x[id]),
     };
   });
+  series.omitidas = omitidas;
+  return series;
+}
+
+/** Añade a la nota del gráfico el aviso de series recortadas, si hubo. */
+function conAviso(nota, series) {
+  const om = series && series.omitidas;
+  if (!om || !om.length) return nota;
+  return `${nota ? nota + ' ' : ''}No se dibujan ${om.length} unidad(es) `
+    + `—${om.join(', ')}— porque la paleta identifica hasta ${g.TOPE_SERIES} `
+    + `sin repetir color. Fíltralas o usa "Ver tabla" para verlas.`;
 }
 
 /* ------------------------------------------------------------------ */
@@ -239,11 +260,13 @@ function panelResumen(almacen, filtro) {
       el('div', { clase: 'tabla-envoltura', estilo: 'margin-top:12px' }, [bloqueDecisiones(decisiones)])]));
 
   const serRot = seriesUnidad(almacen, filtro, 'rotacionAnualizada');
+  const serAus = seriesUnidad(almacen, filtro, 'ausentismo');
   frag.append(seccion('Tendencia y tablero por unidad', null, [
     el('div', { clase: 'rejilla-2' }, [
       marco({
         titulo: 'Rotación anualizada por unidad',
-        nota: 'Suma de bajas de los últimos 12 meses sobre plantilla propia promedio. Los primeros 11 meses no producen valor.',
+        nota: conAviso('Suma de bajas de los últimos 12 meses sobre plantilla propia '
+          + 'promedio. Los primeros 11 meses no producen valor.', serRot),
         series: serRot,
         dibujar: (c) => g.lineas(c, {
           series: serRot, etiquetas, formato: 'pct',
@@ -254,13 +277,13 @@ function panelResumen(almacen, filtro) {
       }),
       marco({
         titulo: 'Ausentismo por unidad',
-        nota: 'Horas de ausencia sobre horas programadas.',
-        series: seriesUnidad(almacen, filtro, 'ausentismo'),
+        nota: conAviso('Horas de ausencia sobre horas programadas.', serAus),
+        series: serAus,
         dibujar: (c) => g.lineas(c, {
-          series: seriesUnidad(almacen, filtro, 'ausentismo'), etiquetas, formato: 'pct',
+          series: serAus, etiquetas, formato: 'pct',
           meta: { valor: almacen.metaPorKpi.get('ausentismo')?.meta },
         }),
-        tabla: () => tablaSeries(etiquetas, seriesUnidad(almacen, filtro, 'ausentismo'), 'pct'),
+        tabla: () => tablaSeries(etiquetas, serAus, 'pct'),
       }),
     ]),
     el('div', { clase: 'tabla-envoltura', estilo: 'margin-top:12px' }, [
@@ -320,7 +343,8 @@ function panelPlantilla(almacen, filtro) {
       }),
       marco({
         titulo: 'Rotación voluntaria anualizada por unidad',
-        nota: 'La rotación voluntaria es la que responde a compensación, liderazgo y condiciones de turno.',
+        nota: conAviso('La rotación voluntaria es la que responde a compensación, '
+          + 'liderazgo y condiciones de turno.', serRotVol),
         series: serRotVol,
         dibujar: (c) => g.lineas(c, {
           series: serRotVol, etiquetas, formato: 'pct',
@@ -418,7 +442,8 @@ function panelCosto(almacen, filtro) {
       }),
       marco({
         titulo: 'Horas extra sobre horas ordinarias',
-        nota: 'Arriba de meta es señal de plantilla incompleta o ausentismo, y riesgo de fatiga.',
+        nota: conAviso('Arriba de meta es señal de plantilla incompleta o ausentismo, '
+          + 'y riesgo de fatiga.', serHe),
         series: serHe,
         dibujar: (c) => g.lineas(c, {
           series: serHe, etiquetas, formato: 'pct',
@@ -428,7 +453,7 @@ function panelCosto(almacen, filtro) {
       }),
       marco({
         titulo: 'Costo laboral por tonelada movida',
-        nota: 'Solo áreas con producción asociada (mina y planta).',
+        nota: conAviso('Solo áreas con producción asociada: mina, planta y metalurgia.', serCpt),
         series: serCpt,
         dibujar: (c) => g.lineas(c, {
           series: serCpt, etiquetas, formato: 'mxn2',
@@ -506,7 +531,8 @@ function panelDesarrollo(almacen, filtro) {
       }),
       marco({
         titulo: 'Cumplimiento DC-3 por unidad',
-        nota: 'Constancias de competencias emitidas sobre requeridas. Es exposición legal directa.',
+        nota: conAviso('Constancias de competencias emitidas sobre requeridas. '
+          + 'Es exposición legal directa.', serDc3),
         series: serDc3,
         dibujar: (c) => g.lineas(c, {
           series: serDc3, etiquetas, formato: 'pct',
@@ -516,7 +542,8 @@ function panelDesarrollo(almacen, filtro) {
       }),
       marco({
         titulo: 'eNPS por unidad',
-        nota: 'Indicador de clima. Lecturas por debajo de meta anticipan rotación voluntaria y tensión sindical.',
+        nota: conAviso('Indicador de clima. Lecturas por debajo de meta anticipan '
+          + 'rotación voluntaria y tensión sindical.', serEnps),
         series: serEnps,
         dibujar: (c) => g.lineas(c, {
           series: serEnps, etiquetas, formato: 'dec',
@@ -645,6 +672,69 @@ function panelDatos(almacen) {
 /* Filtros y render                                                    */
 /* ------------------------------------------------------------------ */
 
+/*
+ * Chips de filtro: un clic MUESTRA el dato del botón.
+ *
+ * Antes hacía lo contrario. Como por omisión todo estaba activo, apretar
+ * una unidad la SACABA de la vista: el gesto natural de "quiero ver
+ * Cieneguita" borraba Cieneguita. Operación lo reportó y tenían razón.
+ *
+ * Reglas, iguales en los dos grupos de chips:
+ *   clic                        → solo ese valor
+ *   clic en el único ya elegido → vuelve a todos, para no dejar callejón
+ *                                 sin salida
+ *   Ctrl / Cmd / Shift + clic   → suma o quita, para comparar dos o tres
+ *
+ * El conjunto vacío significa "todos", y en ese estado NINGÚN chip se
+ * dibuja apretado. Antes se pintaban todos, y por eso "todos" se veía
+ * idéntico a "todos elegidos a mano": de ahí venía la confusión sobre qué
+ * hacía el clic.
+ */
+function chipsFiltro(campo, valores, seleccion, guardar, opciones = {}) {
+  const chips = el('div', { clase: 'chips' });
+  const claveDe = opciones.clave || ((v) => v);
+
+  valores.forEach((v, i) => {
+    const id = claveDe(v);
+    const b = el('button', {
+      clase: 'chip', type: 'button',
+      'aria-pressed': String(seleccion.has(id)),
+      title: opciones.titulo ? opciones.titulo(v) : null,
+    }, opciones.contenido ? opciones.contenido(v, i) : [String(v)]);
+
+    b.addEventListener('click', (ev) => {
+      const sumar = ev.ctrlKey || ev.metaKey || ev.shiftKey;
+      const nueva = new Set(seleccion);
+      if (sumar) {
+        if (nueva.has(id)) nueva.delete(id);
+        else nueva.add(id);
+      } else if (nueva.size === 1 && nueva.has(id)) {
+        nueva.clear();                 // ya estaba solo: volver a todos
+      } else {
+        nueva.clear();
+        nueva.add(id);                 // el clic simple aísla
+      }
+      guardar(nueva);
+      render();
+    });
+    chips.append(b);
+  });
+
+  campo.append(chips);
+}
+
+/* Etiqueta con el alcance actual: "todas (8)" o "2 de 8". Sin esto, un
+   estado sin chips apretados se lee como "no hay nada seleccionado". */
+function etiquetaAlcance(texto, seleccion, total, todos = 'todas') {
+  return el('label', {}, [
+    texto,
+    el('span', {
+      clase: 'alcance',
+      texto: seleccion.size === 0 ? `${todos} (${total})` : `${seleccion.size} de ${total}`,
+    }),
+  ]);
+}
+
 function construirFiltros(almacen) {
   const cont = document.getElementById('filtros');
   cont.replaceChildren();
@@ -660,46 +750,24 @@ function construirFiltros(almacen) {
   campoMeses.append(sel);
 
   const campoUni = el('div', { clase: 'campo' });
-  campoUni.append(el('label', { texto: 'Unidad' }));
-  const chipsUni = el('div', { clase: 'chips' });
-  almacen.unidades.forEach((u, i) => {
-    const activo = estado.unidades.size === 0 || estado.unidades.has(u.unidad_id);
-    const b = el('button', {
-      clase: 'chip', type: 'button', 'aria-pressed': String(activo),
-      title: `${u.estado} · ${u.tipo_operacion} · ${u.mineral_principal}`,
-    }, [
-      el('i', { clase: 'punto', estilo: `background:${g.color(i)}` }),
-      u.unidad,
-    ]);
-    b.addEventListener('click', () => {
-      if (estado.unidades.size === 0) {
-        estado.unidades = new Set(almacen.unidades.map((x) => x.unidad_id));
-      }
-      if (estado.unidades.has(u.unidad_id)) estado.unidades.delete(u.unidad_id);
-      else estado.unidades.add(u.unidad_id);
-      if (estado.unidades.size === 0) estado.unidades = new Set();
-      render();
+  campoUni.append(etiquetaAlcance('Unidad', estado.unidades,
+    almacen.unidades.length, 'todas'));
+  chipsFiltro(campoUni, almacen.unidades, estado.unidades,
+    (s) => { estado.unidades = s; }, {
+      clave: (u) => u.unidad_id,
+      titulo: (u) => `${u.estado} · ${u.tipo_operacion} · ${u.mineral_principal}`,
+      contenido: (u, i) => [
+        el('i', { clase: 'punto', estilo: `background:${g.color(i)}` }),
+        u.unidad,
+      ],
     });
-    chipsUni.append(b);
-  });
-  campoUni.append(chipsUni);
 
   const tipos = [...new Set(almacen.areas.map((a) => a.tipo_area))];
   const campoArea = el('div', { clase: 'campo' });
-  campoArea.append(el('label', { texto: 'Tipo de área' }));
-  const chipsArea = el('div', { clase: 'chips' });
-  for (const t of tipos) {
-    const activo = estado.tiposArea.size === 0 || estado.tiposArea.has(t);
-    const b = el('button', { clase: 'chip', type: 'button', 'aria-pressed': String(activo), texto: t });
-    b.addEventListener('click', () => {
-      if (estado.tiposArea.size === 0) estado.tiposArea = new Set(tipos);
-      if (estado.tiposArea.has(t)) estado.tiposArea.delete(t);
-      else estado.tiposArea.add(t);
-      render();
-    });
-    chipsArea.append(b);
-  }
-  campoArea.append(chipsArea);
+  campoArea.append(etiquetaAlcance('Tipo de área', estado.tiposArea,
+    tipos.length, 'todos'));
+  chipsFiltro(campoArea, tipos, estado.tiposArea,
+    (s) => { estado.tiposArea = s; });
 
   const acciones = el('div', { clase: 'filtros-acciones' });
   acciones.append(el('button', {
@@ -711,7 +779,18 @@ function construirFiltros(almacen) {
     onclick: () => window.print(),
   }));
 
-  cont.append(el('div', { clase: 'filtros-inner' }, [campoMeses, campoUni, campoArea, acciones]));
+  /* La regla del clic tiene que estar a la vista: el Ctrl+clic para
+     comparar no se descubre solo, y sin esta línea la única forma de
+     enterarse es preguntando. */
+  const ayuda = el('p', {
+    clase: 'filtros-ayuda',
+    html: 'Un clic <strong>muestra solo ese dato</strong>. '
+      + 'Vuelve a apretarlo para ver todos otra vez. '
+      + '<kbd>Ctrl</kbd>+clic (<kbd>⌘</kbd> en Mac) para comparar varios.',
+  });
+
+  cont.append(el('div', { clase: 'filtros-inner' },
+    [campoMeses, campoUni, campoArea, acciones, ayuda]));
 }
 
 function construirNav() {
