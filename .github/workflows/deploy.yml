@@ -54,11 +54,40 @@ jobs:
           python3 etl/seed_demo.py
           python3 etl/excel.py crear
 
-      - name: Probar lectura del libro de Excel y el validador
-        run: python3 -m unittest discover -s tests -v
-
+      # La validación de datos va primero: es la que falla cuando alguien
+      # sube un libro incompleto, y es el mensaje que debe leerse primero.
       - name: Validar esquema, llaves y reglas de negocio
         run: python3 etl/validate.py
+
+      # Si algo falló arriba, esto traduce la lista de errores a pendientes
+      # concretos y los deja en el resumen de la ejecución, que es la
+      # pantalla que abre quien subió el libro.
+      - name: Explicar en lenguaje claro qué hay que corregir
+        if: failure()
+        run: |
+          python3 etl/diagnostico.py | tee /tmp/diagnostico.txt
+          {
+            echo "## La base de datos necesita correcciones"
+            echo ""
+            echo "El tablero **no se republicó**: sigue mostrando el cierre anterior."
+            echo "Corrige el libro \`data/BASE_RRHH.xlsx\` y súbelo otra vez."
+            echo ""
+            echo '```'
+            cat /tmp/diagnostico.txt
+            echo '```'
+          } >> $GITHUB_STEP_SUMMARY
+
+      - name: Guardar el diagnóstico para imprimir o reenviar
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: diagnostico-de-la-base
+          path: DIAGNOSTICO.html
+          if-no-files-found: ignore
+          retention-days: 30
+
+      - name: Probar lectura del libro de Excel y el validador
+        run: python3 -m unittest discover -s tests -v
 
       - name: Construir dashboard.json
         run: python3 etl/build.py
