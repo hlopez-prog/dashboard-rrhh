@@ -19,11 +19,35 @@ sys.path.insert(0, os.path.join(RAIZ, "etl"))
 
 import schema  # noqa: E402
 import excel as libro_maestro  # noqa: E402
-import captura  # noqa: E402
+
+# etl/captura.py es OPCIONAL: la captura repartida por unidad no está en uso,
+# el flujo vigente es un solo libro maestro. Si el módulo no está en el
+# repositorio, estas pruebas se SALTAN.
+#
+# Antes esto era un `import captura` a secas, y su ausencia rompía el
+# descubrimiento de pruebas completo: unittest abortaba con ImportError, el
+# paso de CI fallaba y el tablero no se publicaba nunca. Una prueba de algo
+# opcional no puede tumbar el despliegue de lo que sí está.
+try:
+    import captura  # noqa: E402
+except ImportError:  # pragma: no cover
+    captura = None
+
+# El import puede "funcionar" sin que exista el módulo: en la raíz hay una
+# carpeta llamada captura/ con los libros generados, y Python la toma como
+# paquete de espacio de nombres. Importa vacío y el fallo aparece después,
+# como AttributeError dentro de setUpClass. Por eso no basta con que el
+# import no truene: se comprueba que el módulo traiga lo que se va a usar.
+if captura is not None and not hasattr(captura, "crear"):  # pragma: no cover
+    captura = None
 
 from openpyxl import load_workbook  # noqa: E402
 
+HAY_CAPTURA = captura is not None
+FALTA = "etl/captura.py no está en el repositorio (herramienta opcional)"
 
+
+@unittest.skipUnless(HAY_CAPTURA, FALTA)
 @unittest.skipUnless(os.path.exists(libro_maestro.LIBRO), "falta data/BASE_RRHH.xlsx")
 class TestHojasDeCaptura(unittest.TestCase):
 
