@@ -40,9 +40,16 @@ class TestLecturaLibro(unittest.TestCase):
         for tabla in schema.ORDEN_CARGA:
             self.assertIn(tabla, self.tablas, f"falta la hoja {tabla}")
 
-    def test_ninguna_hoja_vacia(self):
-        for tabla, filas in self.tablas.items():
-            self.assertGreater(len(filas), 0, f"la hoja {tabla} no tiene registros")
+    def test_las_hojas_imprescindibles_traen_registros(self):
+        """
+        Sin catálogos, plantilla y metas no hay tablero. Una hoja de hechos
+        vacía, en cambio, es un módulo que todavía no se captura: el tablero
+        lo publica como "—". Exigir aquí que todas traigan filas obligaría a
+        inventar un mes de nómina para poder desplegar.
+        """
+        for tabla in ("dim_unidad", "dim_area", "fact_plantilla", "metas"):
+            self.assertGreater(len(self.tablas[tabla]), 0,
+                               f"la hoja {tabla} no tiene registros")
 
     def test_encabezados_exactos_y_en_orden(self):
         wb = load_workbook(excel.LIBRO, read_only=True)
@@ -60,9 +67,13 @@ class TestLecturaLibro(unittest.TestCase):
             self.assertRegex(str(fila["periodo"]), r"^\d{4}-(0[1-9]|1[0-2])$")
 
     def test_los_numeros_se_leen_como_numeros(self):
-        fila = self.tablas["fact_nomina"][0]
-        self.assertIsInstance(fila["costo_ordinario"], (int, float))
-        self.assertGreater(fila["costo_ordinario"], 0)
+        fila = self.tablas["fact_plantilla"][0]
+        self.assertIsInstance(fila["headcount"], (int, float))
+        self.assertGreater(fila["headcount"], 0)
+        if self.tablas["fact_nomina"]:
+            costo = self.tablas["fact_nomina"][0]["costo_ordinario"]
+            self.assertIsInstance(costo, (int, float))
+            self.assertGreater(costo, 0)
 
     def test_la_configuracion_viene_de_la_hoja_leeme(self):
         self.assertIn(self.config["origen"], ("DEMO", "REAL"))
@@ -139,8 +150,49 @@ class TestValidadorAtrapaErrores(unittest.TestCase):
     def tearDown(self):
         shutil.rmtree(self.dir, ignore_errors=True)
 
+    # Valores que no pueden ser un 100 cualquiera: los que participan en una
+    # regla de negocio, o en un catálogo cerrado.
+    SEMILLA = {
+        "tipo_relacion": "Propio", "turno": "7x7", "direccion": "menor_mejor",
+        "sindicato": "Sindicato de prueba", "riesgo_sindical": 3, "enps": 0,
+        "horas_programadas": 1000, "horas_ausencia": 10,
+        "dc3_requeridos": 10, "dc3_emitidos": 5,
+        "puestos_criticos_totales": 10, "puestos_criticos_cubiertos": 5,
+        "es_corporativo": 0, "es_critica": 1,
+    }
+
+    def _sembrar(self, wb, hoja):
+        """
+        Deja una fila válida en la hoja si está vacía.
+
+        Los tests del validador prueban que un error de captura se detecte;
+        no deben depender de qué módulos ya se estén capturando. Sin esto, el
+        día que nómina se publique vacía —porque todavía no se captura— estas
+        pruebas fallarían sin que nada esté mal.
+        """
+        ws = wb[hoja]
+        if any(c.value not in (None, "") for c in ws[2]):
+            return
+        cols = list(schema.TABLAS[hoja]["columnas"].items())
+        primera = {"unidad_id": wb["dim_unidad"]["A2"].value,
+                   "area_id": wb["dim_area"]["A2"].value,
+                   "periodo": wb["fact_plantilla"]["A2"].value or "2026-08"}
+        for j, (col, tipo) in enumerate(cols, start=1):
+            if col in primera:
+                v = primera[col]
+            elif col in self.SEMILLA:
+                v = self.SEMILLA[col]
+            elif tipo == "p":
+                v = primera["periodo"]
+            elif tipo == "s":
+                v = f"prueba {col}"
+            else:
+                v = 100
+            ws.cell(row=2, column=j, value=v)
+
     def _validar_tras_editar(self, hoja, celda, valor):
         wb = load_workbook(self.copia)
+        self._sembrar(wb, hoja)
         wb[hoja][celda] = valor
         wb.save(self.copia)
         wb.close()
@@ -193,6 +245,113 @@ class TestValidadorAtrapaErrores(unittest.TestCase):
     def test_un_libro_valido_no_produce_errores(self):
         tablas, _ = excel.leer(self.copia)
         self.assertEqual(validate.validar(tablas, "excel")[0], [])
+
+
+class TestColumnasOpcionales(unittest.TestCase):
+    """
+    Una columna opcional vacía no es un error, y tampoco es un cero: queda
+    en None. Es la diferencia entre "no hubo mujeres en esa área" y "nadie
+    capturó cuántas mujeres hubo".
+    """
+
+    def _fila_plantilla(self, **cambios):
+        base = {
+            "periodo": "2026-08", "unidad_id": "U01", "area_id": "A01",
+            "tipo_relacion": "Propio", "turno": "7x7", "headcount": 100,
+            "dotacion_autorizada": "", "mujeres": "", "antiguedad_prom_meses": "",
+            "puestos_criticos_totales": "", "puestos_criticos_cubiertos": "",
+            "_n": 2,
+        }
+        base.update(cambios)
+        return base
+
+    def _validar(self, fila):
+        tablas = {
+            "dim_unidad": [{"unidad_id": "U01", "unidad": "U", "estado": "Zac",
+                            "tipo_operacion": "Subterránea",
+                            "mineral_principal": "Plata", "es_corporativo": 0,
+                            "_n": 2}],
+            "dim_area": [{"area_id": "A01", "area": "Mina", "tipo_area": "Mina",
+                          "es_critica": 1, "_n": 2}],
+            "fact_plantilla": [fila],
+        }
+        return validate.validar(tablas, "excel")[0], tablas
+
+    def test_opcional_vacia_no_es_error_y_queda_en_none(self):
+        errores, tablas = self._validar(self._fila_plantilla())
+        self.assertEqual(errores, [], f"errores: {errores[:3]}")
+        fila = tablas["fact_plantilla"][0]
+        for col in ("dotacion_autorizada", "mujeres", "antiguedad_prom_meses"):
+            self.assertIsNone(fila[col], f"{col} debería quedar en None, no en 0")
+
+    def test_obligatoria_vacia_si_es_error(self):
+        errores, _ = self._validar(self._fila_plantilla(headcount=""))
+        self.assertTrue(any("headcount" in e for e in errores))
+        self.assertTrue(any(getattr(e, "clase", "") == "vacia_obligatoria"
+                            for e in errores),
+                        "el error debe venir clasificado para el diagnóstico")
+
+    def test_turno_vacio_no_dispara_la_regla_de_catalogo(self):
+        """Un turno vacío ya se reporta una vez (o ninguna, si es opcional):
+        la regla de catálogo no debe reportarlo otra vez."""
+        errores, _ = self._validar(self._fila_plantilla(turno=""))
+        self.assertEqual([e for e in errores if "catálogo" in e], [],
+                         f"errores: {errores[:3]}")
+
+
+class TestDiagnostico(unittest.TestCase):
+    """El diagnóstico agrupa: 400 celdas iguales son un pendiente, no 400."""
+
+    def setUp(self):
+        sys.path.insert(0, os.path.join(RAIZ, "etl"))
+        import diagnostico  # noqa: PLC0415
+        self.d = diagnostico
+
+    def test_rangos_comprime_filas_consecutivas(self):
+        self.assertEqual(self.d.rangos([4, 5, 6, 9, 10, 20]), "4-6, 9-10, 20")
+        self.assertEqual(self.d.rangos([7]), "7")
+        self.assertEqual(self.d.rangos([]), "—")
+        self.assertEqual(self.d.rangos([3, None, 2]), "2-3")
+
+    def test_recortar_no_corta_un_numero_a_la_mitad(self):
+        texto = ", ".join(str(i) for i in range(1, 41))
+        salida = self.d.recortar(texto, piezas=5)
+        self.assertTrue(salida.startswith("1, 2, 3, 4, 5"))
+        self.assertIn("35 rangos más", salida)
+
+    def test_agrupa_por_hoja_columna_y_clase(self):
+        errores = [
+            validate.Hallazgo("x", "fact_plantilla", "vacia_obligatoria",
+                              "headcount", n)
+            for n in range(2, 12)
+        ] + [validate.Hallazgo("y", "fact_nomina", "llave_duplicada", "pk", 5)]
+        grupos = self.d.agrupar(errores)
+        self.assertEqual(len(grupos), 2, "diez celdas iguales son un pendiente")
+        (tabla, clase, col), g = grupos[0]
+        self.assertEqual((tabla, clase, col),
+                         ("fact_plantilla", "vacia_obligatoria", "headcount"))
+        self.assertEqual(len(g["filas"]), 10)
+        self.assertIn("2-11", self.d.rangos(g["filas"]))
+
+    def test_explica_cada_clase_de_problema(self):
+        """Ningún grupo puede quedarse sin instrucción de qué hacer."""
+        for clase in self.d.ORDEN_CLASES:
+            self.assertIn(clase, self.d.QUE_HACER,
+                          f"falta el 'qué hacer' de la clase {clase}")
+
+    def test_detecta_bloques_con_area_repetida(self):
+        tablas = {
+            "dim_area": [{"area_id": "A01"}, {"area_id": "A02"}],
+            "fact_nomina": [
+                {"periodo": "2026-08", "unidad_id": "U01", "area_id": "A01"},
+                {"periodo": "2026-08", "unidad_id": "U01", "area_id": "A02"},
+                {"periodo": "2026-08", "unidad_id": "U01", "area_id": "A02"},
+            ],
+        }
+        b = [x for x in self.d.bloques(tablas) if x["hoja"] == "fact_nomina"][0]
+        self.assertEqual(b["formas"], [(3, 1)])
+        self.assertEqual(b["repetidas"], [("A02", 1)])
+        self.assertEqual(b["areas_catalogo"], 2)
 
 
 if __name__ == "__main__":

@@ -287,6 +287,115 @@ test('variaciones calcula mes contra mes', () => {
   cerca(v.mom, 0); // el dataset es plano
 });
 
+/* ---------- Huecos: null ≠ 0 ----------
+   La base real llega con columnas de detalle vacías. Un hueco significa
+   "no se sabe": no puede convertirse en cero ni diluir el denominador. */
+
+function datasetConHuecos() {
+  const plantilla = [];
+  const nomina = [];
+  const capacitacion = [];
+  const movimientos = [];
+  const ausentismo = [];
+  const relaciones = [];
+  for (const p of PERIODOS) {
+    //                                turno  hc  dot  muj antig pcTot pcOk
+    plantilla.push([p, 'U1', 'A1', 'Propio', '7x7', 100, 110, 10, 60, 20, 18]);
+    // A2 reporta headcount pero NO el detalle: dotación, mujeres, etc. vacíos
+    plantilla.push([p, 'U1', 'A2', 'Propio', null, 100, null, null, null, null, null]);
+
+    movimientos.push([p, 'U1', 'A1', 3, 2, 1, 1, 5, 40]);
+    movimientos.push([p, 'U1', 'A2', 1, 1, 0, null, null, null]);
+    ausentismo.push([p, 'U1', 'A1', 10000, 300, 5, 30]);
+    ausentismo.push([p, 'U1', 'A2', 10000, 100, null, null]);
+    // A2 sin presupuesto, sin horas extra, sin toneladas
+    nomina.push([p, 'U1', 'A1', 1000000, 100000, 300000, 20000, 1000, 1400000, 50000]);
+    nomina.push([p, 'U1', 'A2', 1000000, null, null, 20000, null, null, null]);
+    capacitacion.push([p, 'U1', 'A1', 200, 180, 50, 30, 27, 60000, 20, 18]);
+    capacitacion.push([p, 'U1', 'A2', null, 100, null, 20, 20, null, null, null]);
+    relaciones.push([p, 'U1', 'Sind. A', 80, null, 2, null, null, 3, null, null]);
+  }
+  return construirAlmacen({
+    tablas: {
+      unidad: columnar(
+        ['unidad_id', 'unidad', 'estado', 'tipo_operacion', 'mineral_principal', 'es_corporativo'],
+        [['U1', 'Unidad Uno', 'Zacatecas', 'Subterránea', 'Plata', 0]]),
+      area: columnar(['area_id', 'area', 'tipo_area', 'es_critica'],
+        [['A1', 'Mina', 'Mina', 1], ['A2', 'Administración', 'Administración', 0]]),
+      plantilla: columnar(['periodo', 'unidad_id', 'area_id', 'tipo_relacion', 'turno',
+        'headcount', 'dotacion_autorizada', 'mujeres', 'antiguedad_prom_meses',
+        'puestos_criticos_totales', 'puestos_criticos_cubiertos'], plantilla),
+      movimientos: columnar(['periodo', 'unidad_id', 'area_id', 'altas', 'bajas_voluntarias',
+        'bajas_involuntarias', 'bajas_menos_90_dias', 'vacantes_abiertas',
+        'dias_cobertura_prom'], movimientos),
+      ausentismo: columnar(['periodo', 'unidad_id', 'area_id', 'horas_programadas',
+        'horas_ausencia', 'casos_incapacidad', 'dias_incapacidad'], ausentismo),
+      nomina: columnar(['periodo', 'unidad_id', 'area_id', 'costo_ordinario',
+        'costo_horas_extra', 'costo_prestaciones', 'horas_ordinarias', 'horas_extra',
+        'presupuesto_costo_laboral', 'toneladas_movidas'], nomina),
+      capacitacion: columnar(['periodo', 'unidad_id', 'area_id', 'horas_plan', 'horas_real',
+        'participantes', 'dc3_requeridos', 'dc3_emitidos', 'inversion_mxn',
+        'competencias_criticas_req', 'competencias_criticas_ok'], capacitacion),
+      relaciones: columnar(['periodo', 'unidad_id', 'sindicato', 'trabajadores_sindicalizados',
+        'emplazamientos', 'conflictos_abiertos', 'conflictos_cerrados',
+        'dias_a_revision_cct', 'riesgo_sindical', 'enps', 'participacion_clima'], relaciones),
+      metas: columnar(['kpi', 'nombre', 'meta', 'direccion', 'unidad_medida'], []),
+    },
+    meta: { periodos: PERIODOS, periodo_inicial: PERIODOS[0], periodo_final: PERIODOS.at(-1) },
+  });
+}
+
+const conHuecos = datasetConHuecos();
+const todoHuecos = construirFiltro(conHuecos, { meses: PERIODOS.length });
+
+test('un hueco no diluye el denominador de la razón', () => {
+  const u = serie(conHuecos, todoHuecos).at(-1);
+  // headcount total sí suma las dos áreas
+  assert.equal(u.headcountPropio, 200);
+  // pero mujeres y dotación solo existen en A1: la razón usa SU headcount
+  cerca(u.pctMujeres, (10 / 100) * 100);          // NO 10/200 = 5 %
+  cerca(u.coberturaPlantilla, (100 / 110) * 100); // NO 200/110 = 182 %
+  cerca(u.antiguedadMeses, 60);                   // NO (60×100)/200 = 30
+  cerca(u.coberturaCritica, (18 / 20) * 100);
+});
+
+test('un hueco no se cuenta como cero en promedios ni en mínimos', () => {
+  const u = serie(conHuecos, todoHuecos).at(-1);
+  cerca(u.diasCobertura, 40);                     // solo A1 reportó días
+  cerca(u.rotacionTemprana, (1 / 2) * 100);       // 1 baja temprana / 2 vol. de A1
+  cerca(u.pctHorasExtra, (1000 / 20000) * 100);   // solo las horas de A1
+  cerca(u.cumplimientoPlanCap, (180 / 200) * 100);
+});
+
+test('una columna vacía en todas las filas vale null, no cero', () => {
+  const u = serie(conHuecos, todoHuecos).at(-1);
+  assert.equal(u.emplazamientos, null, 'emplazamientos debería ser null');
+  assert.equal(u.enps, null, 'eNPS debería ser null');
+  assert.equal(u.diasARevisionCct, null);
+  assert.equal(u.inversionCap, 60000); // A1 sí reportó
+});
+
+test('el presupuesto se compara solo contra las áreas que lo tienen', () => {
+  const u = serie(conHuecos, todoHuecos).at(-1);
+  // A1: real 1 400 000 vs presupuesto 1 400 000 → 0 %. A2 no entra.
+  cerca(u.varPresupuesto, 0);
+  assert.equal(u.presupuesto, 1400000);
+  // el costo laboral total sí suma lo conocido de las dos áreas
+  assert.equal(u.costoLaboral, 1400000 + 1000000);
+});
+
+test('costo por tonelada solo carga el costo de las áreas con producción', () => {
+  const u = serie(conHuecos, todoHuecos).at(-1);
+  cerca(u.costoPorTonelada, 1400000 / 50000); // no arrastra el costo de A2
+  cerca(u.productividad, 50000 / 21000);
+});
+
+test('la rotación anualizada ignora huecos sin romperse', () => {
+  const s = serie(conHuecos, todoHuecos);
+  // 12 meses × 3 bajas (A1) + 1 baja (A2) = 48 sobre 200 propios
+  cerca(s.at(-1).rotacionAnualizada, ((12 * 4) / 200) * 100);
+});
+
 /* ---------- Semáforo ---------- */
 
 test('estadoVsMeta respeta la dirección del indicador', () => {

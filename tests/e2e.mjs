@@ -77,6 +77,16 @@ async function main() {
   }
   if (guardarCapturas) fs.mkdirSync(CAPTURAS, { recursive: true });
 
+  /* Las pruebas se adaptan a lo que la base realmente trae. Un tablero con
+     nómina sin capturar DEBE mostrar "—" en esos KPIs; exigir un número ahí
+     empujaría a inventar un cero para pasar la prueba. */
+  const DATOS = JSON.parse(
+    fs.readFileSync(path.join(PUBLICO, 'data', 'dashboard.json'), 'utf8'),
+  );
+  const CON_DATOS = new Set(
+    Object.entries(DATOS.tablas).filter(([, t]) => t.filas.length).map(([k]) => k),
+  );
+
   const srv = await servidor();
   const base = `http://127.0.0.1:${srv.address().port}`;
   /* CHROMIUM_BIN permite apuntar a un Chromium ya instalado (CI, contenedor). */
@@ -108,8 +118,12 @@ async function main() {
     afirmar(/commit/.test(t), 'no aparece el commit');
   });
 
-  await prueba('el aviso de datos demo está visible', async () => {
-    afirmar(await pagina.isVisible('#aviso'), 'el aviso demo debería mostrarse con .demo presente');
+  await prueba('el aviso de datos demo aparece solo con datos demo', async () => {
+    const visible = await pagina.isVisible('#aviso');
+    afirmar(visible === DATOS.meta.es_demo,
+      DATOS.meta.es_demo
+        ? 'la base está marcada DEMO y el aviso no se muestra'
+        : 'la base está marcada REAL y aun así se muestra el aviso de demo');
   });
 
   await prueba('la matriz ejecutiva tiene las cinco filas institucionales', async () => {
@@ -157,10 +171,26 @@ async function main() {
     afirmar(etiquetas.every((t) => /^[●▲–]/.test(t)), 'alguna etiqueta no lleva icono');
   });
 
-  await prueba('los KPIs muestran valores numéricos, no marcadores vacíos', async () => {
-    const valores = await pagina.$$eval('.kpi-valor', (ns) => ns.map((n) => n.textContent.trim()));
-    const vacios = valores.filter((v) => v === '—' || v === '');
-    afirmar(vacios.length === 0, `${vacios.length} de ${valores.length} tarjetas sin valor`);
+  await prueba('los KPIs con datos capturados muestran número; los demás, "—"', async () => {
+    const tarjetas = await pagina.$$eval('.kpi', (ns) => ns.map((n) => ({
+      nombre: n.querySelector('.kpi-nombre')?.textContent.trim() || '',
+      valor: n.querySelector('.kpi-valor')?.textContent.trim() || '',
+    })));
+    afirmar(tarjetas.length > 0, 'no se renderizó ninguna tarjeta de KPI');
+
+    /* La plantilla sí está capturada: sus KPIs tienen que traer número. Si
+       todos salieran "—", el tablero estaría roto y no incompleto. */
+    const conNumero = tarjetas.filter((t) => t.valor !== '—' && t.valor !== '');
+    afirmar(conNumero.length > 0,
+      `las ${tarjetas.length} tarjetas salieron vacías: el tablero está roto, no incompleto`);
+
+    /* Y ningún hueco puede imprimirse como cero disfrazado. */
+    const ceros = tarjetas.filter((t) => /^\$?0([.,]0+)?\s*%?$/.test(t.valor));
+    if (!CON_DATOS.has('nomina')) {
+      afirmar(!ceros.some((t) => /costo|extra|presupuesto/i.test(t.nombre)),
+        `un KPI de nómina sin datos se imprimió como cero: `
+        + ceros.map((t) => `${t.nombre}=${t.valor}`).join(', '));
+    }
   });
 
   /* --- Recorrido por módulos --- */
