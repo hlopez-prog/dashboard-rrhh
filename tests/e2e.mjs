@@ -251,27 +251,77 @@ async function main() {
     });
   }
 
-  await prueba('filtrar por una unidad reduce el headcount reportado', async () => {
+  /* --- Filtros: un clic MUESTRA el dato del botón --------------------
+     La semántica anterior era la inversa (el clic quitaba de la vista) y
+     era justo lo contrario de lo que espera quien aprieta el botón de una
+     unidad. Estas pruebas fijan la nueva regla para que no se revierta. */
+
+  const SEL_CHIPS = '#filtros .campo:nth-of-type(2) .chip';
+  const num = (s) => Number(String(s).replace(/[^\d]/g, ''));
+  const valorKpi = () => pagina.textContent('#panel .kpi .kpi-valor');
+  const apretados = () => pagina.$$eval(
+    '#filtros .chips .chip[aria-pressed="true"]', (n) => n.length);
+  /* Los chips se reconstruyen en cada render: hay que volver a pedirlos. */
+  const clicChip = async (i, modifiers = []) => {
+    const chips = await pagina.$$(SEL_CHIPS);
+    await chips[i].click(modifiers.length ? { modifiers } : undefined);
+    await pagina.waitForTimeout(300);
+  };
+
+  await prueba('sin filtrar, ningún chip aparece apretado', async () => {
     await pagina.click('#tab-plantilla');
     await pagina.waitForTimeout(400);
-    const antes = await pagina.textContent('#panel .kpi .kpi-valor');
-    /* Los chips se reconstruyen en cada render: hay que volver a consultarlos. */
-    for (let i = 4; i >= 1; i--) {
-      const chips = await pagina.$$('#filtros .campo:nth-of-type(2) .chip');
-      await chips[i].click();
-      await pagina.waitForTimeout(250);
-    }
-    const despues = await pagina.textContent('#panel .kpi .kpi-valor');
-    afirmar(antes !== despues, `el valor no cambió (${antes})`);
-    const n = (s) => Number(s.replace(/[^\d]/g, ''));
-    afirmar(n(despues) < n(antes), `${despues} debería ser menor que ${antes}`);
+    await pagina.click('#filtros .boton');          // Limpiar filtros
+    await pagina.waitForTimeout(400);
+    afirmar(await apretados() === 0,
+      `"todas" no debe verse igual que "todas elegidas": ${await apretados()} apretados`);
+    const alcance = await pagina.textContent('#filtros .campo:nth-of-type(2) .alcance');
+    afirmar(/todas/i.test(alcance), `la etiqueta debería decir "todas", dice "${alcance}"`);
+  });
+
+  let totalPlantilla = null;
+  let unaUnidad = null;
+
+  await prueba('un clic muestra solo esa unidad y reduce el total', async () => {
+    totalPlantilla = num(await valorKpi());
+    await clicChip(1);
+    unaUnidad = num(await valorKpi());
+    afirmar(await apretados() === 1,
+      `el clic simple debe dejar un solo chip apretado, hay ${await apretados()}`);
+    afirmar(unaUnidad < totalPlantilla,
+      `${unaUnidad} debería ser menor que el total ${totalPlantilla}`);
+    const alcance = await pagina.textContent('#filtros .campo:nth-of-type(2) .alcance');
+    afirmar(/^1 de/.test(alcance.trim()), `la etiqueta debería decir "1 de N", dice "${alcance}"`);
+  });
+
+  await prueba('Ctrl+clic suma una segunda unidad en lugar de reemplazarla', async () => {
+    await clicChip(2, ['Control']);
+    afirmar(await apretados() === 2,
+      `deberían quedar 2 chips apretados, hay ${await apretados()}`);
+    const dos = num(await valorKpi());
+    afirmar(dos > unaUnidad, `${dos} debería ser mayor que ${unaUnidad} con dos unidades`);
+    afirmar(dos <= totalPlantilla, `${dos} no puede superar el total ${totalPlantilla}`);
+  });
+
+  await prueba('volver a apretar el chip aislado regresa a todas', async () => {
+    await clicChip(2, ['Control']);   // queda solo la unidad del chip 1
+    afirmar(await apretados() === 1, `esperaba 1 apretado, hay ${await apretados()}`);
+    await clicChip(1);                // mismo chip, ya aislado → todas
+    afirmar(await apretados() === 0,
+      `apretar el único elegido debe volver a todas, quedaron ${await apretados()}`);
+    afirmar(num(await valorKpi()) === totalPlantilla,
+      `el total no volvió: ${await valorKpi()} vs ${totalPlantilla}`);
   });
 
   await prueba('"Limpiar filtros" restablece la vista completa', async () => {
+    await clicChip(3);                               // deja un filtro puesto
+    afirmar(await apretados() === 1, 'no se aplicó el filtro previo');
     await pagina.click('#filtros .boton');
     await pagina.waitForTimeout(500);
-    const activos = await pagina.$$eval('#filtros .chips .chip[aria-pressed="true"]', (n) => n.length);
-    afirmar(activos >= 5, `solo ${activos} chips activos tras limpiar`);
+    afirmar(await apretados() === 0,
+      `tras limpiar no debe quedar ningún chip apretado, quedaron ${await apretados()}`);
+    afirmar(num(await valorKpi()) === totalPlantilla,
+      `el total no volvió tras limpiar: ${await valorKpi()} vs ${totalPlantilla}`);
   });
 
   await prueba('cambiar el rango a 6 meses recorta el eje de tiempo', async () => {
