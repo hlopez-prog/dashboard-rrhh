@@ -87,7 +87,7 @@ const DE_COLUMNA_OPCIONAL = new Set([
   'antigPeso', 'hcPropioAntig', 'pcTot', 'pcOk',
   'bajasTemp', 'bajasVolTemp', 'vacantes', 'diasCobSum',
   'casos', 'diasInc',
-  'costoHE', 'costoPrest', 'hrsHE', 'hrsOrdHE',
+  'costoOrd', 'costoHE', 'costoPrest', 'hrsOrd', 'hrsHE', 'hrsOrdHE',
   'presup', 'costoPresup', 'toneladas', 'costoTon', 'horasTon',
   'hPlan', 'hRealPlan', 'participantes', 'invCap', 'compReq', 'compOk',
   'emplazamientos', 'conflictosCer',
@@ -218,10 +218,12 @@ export function crudosPorPeriodo(almacen, filtro, unidadUnica = null) {
     sum(c, 'hrsOrd', r.horas_ordinarias);
     if (sum(c, 'hrsHE', r.horas_extra)) sum(c, 'hrsOrdHE', r.horas_ordinarias);
 
-    /* Costo laboral de la fila: los componentes ausentes no se inventan,
-       simplemente no entran en el total. */
-    const costoFila = n0(r.costo_ordinario) + n0(r.costo_horas_extra)
-      + n0(r.costo_prestaciones);
+    /* Costo y horas de la fila: si NINGÚN componente se conoce, el total
+       es null (no hay nada que sumar), no cero. costo_ordinario y
+       horas_ordinarias pueden faltar mes a mes en nómina real sin que eso
+       signifique "costo cero" — ver OPCIONALES en etl/schema.py. */
+    const costoFila = total(r.costo_ordinario, r.costo_horas_extra, r.costo_prestaciones);
+    const horasFila = total(r.horas_ordinarias, r.horas_extra);
     /* Real contra presupuesto: solo las áreas que tienen presupuesto. */
     if (sum(c, 'presup', r.presupuesto_costo_laboral)) {
       sum(c, 'costoPresup', costoFila);
@@ -230,7 +232,7 @@ export function crudosPorPeriodo(almacen, filtro, unidadUnica = null) {
        declarada, con el costo y las horas de esas mismas áreas. */
     if (sum(c, 'toneladas', r.toneladas_movidas)) {
       sum(c, 'costoTon', costoFila);
-      sum(c, 'horasTon', n0(r.horas_ordinarias) + n0(r.horas_extra));
+      sum(c, 'horasTon', horasFila);
     }
   }
 
