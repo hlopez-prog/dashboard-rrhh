@@ -70,10 +70,16 @@ class TestLecturaLibro(unittest.TestCase):
         fila = self.tablas["fact_plantilla"][0]
         self.assertIsInstance(fila["headcount"], (int, float))
         self.assertGreater(fila["headcount"], 0)
-        if self.tablas["fact_nomina"]:
-            costo = self.tablas["fact_nomina"][0]["costo_ordinario"]
+        # costo_ordinario es opcional (puede no estar capturado todavía en
+        # ningún mes real): se busca la primera fila que sí lo traiga en
+        # vez de asumir que la primera fila de la hoja lo tiene.
+        for fila_nomina in self.tablas["fact_nomina"]:
+            costo = fila_nomina["costo_ordinario"]
+            if costo is None or costo == "":
+                continue
             self.assertIsInstance(costo, (int, float))
             self.assertGreater(costo, 0)
+            break
 
     def test_la_configuracion_viene_de_la_hoja_leeme(self):
         self.assertIn(self.config["origen"], ("DEMO", "REAL"))
