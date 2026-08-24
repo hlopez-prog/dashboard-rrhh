@@ -168,6 +168,11 @@ OPCIONALES = {
     "fact_nomina": {
         "costo_horas_extra", "costo_prestaciones", "horas_extra",
         "presupuesto_costo_laboral", "toneladas_movidas",
+        # costo_ordinario y horas_ordinarias todavía no se capturan mes a
+        # mes en nómina real (2026-08): se declaran opcionales para que el
+        # resto de la hoja (presupuesto, toneladas) se publique ya. El día
+        # que lleguen, basta llenar la celda; no hace falta tocar código.
+        "costo_ordinario", "horas_ordinarias",
     },
     "fact_capacitacion": {
         "horas_plan", "participantes", "inversion_mxn",
